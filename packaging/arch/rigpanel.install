@@ -1,0 +1,10 @@
+post_install() {
+    cat <<MSG
+
+RigPanel is installed. Each user should:
+  1. Join the serial-port group:   sudo usermod -aG uucp \$USER   (then log out and back in)
+  2. Open "Rig Panel" from the app menu (or run: rigpanel). The first start asks for your callsign.
+  Optional, start at login:        systemctl --user enable --now rigpanel
+
+MSG
+}

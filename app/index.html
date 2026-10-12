@@ -1,0 +1,526 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RigPanel · FT-991A</title>
+<link rel="icon" href="/icon.svg" type="image/svg+xml">
+<style>
+  :root {
+    --bg: #f4f5f7; --panel: #ffffff; --ink: #1d2330; --muted: #667085;
+    --line: #dde1e8; --accent: #1f6feb; --accent-ink: #ffffff;
+    --tx: #d92d20; --ok: #12a150; --display-bg: #0f1720; --display-ink: #7ee2a8;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #11141a; --panel: #1a1f28; --ink: #e6e9ef; --muted: #98a2b3;
+      --line: #2b3240; --accent: #4c8dff; --accent-ink: #0b1020;
+      --tx: #ff5a4f; --ok: #3ad07a; --display-bg: #070b10; --display-ink: #7ee2a8;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+         font: 16px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  .layout { max-width: 1240px; margin: 0 auto; padding: 16px; display: grid; gap: 14px;
+            grid-template-columns: minmax(0, 1fr) 340px; align-items: start; }
+  main { display: grid; gap: 14px; min-width: 0; }
+  aside { position: sticky; top: 16px; max-height: calc(100vh - 32px); display: flex; flex-direction: column;
+          background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px; }
+  aside input[type=search] { font: inherit; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--line);
+                             background: var(--bg); color: var(--ink); margin-bottom: 8px; }
+  .memlist { overflow-y: auto; display: grid; gap: 2px; padding-right: 4px; }
+  .memlist h3 { margin: 10px 0 4px; font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+  .mem { display: grid; grid-template-columns: 34px 1fr auto; gap: 8px; align-items: center; text-align: left;
+         min-height: 40px; padding: 6px 10px; border-radius: 8px; }
+  .mem .n { color: var(--muted); font: 12px ui-monospace, monospace; }
+  .mem .t { font-weight: 600; }
+  .mem .f { font: 13px ui-monospace, monospace; color: var(--muted); }
+  .mem .m { font-size: 11px; color: var(--muted); }
+  .mem.active { background: var(--accent); color: var(--accent-ink); }
+  .mem.active .n, .mem.active .f, .mem.active .m { color: inherit; opacity: .85; }
+  @media (max-width: 900px) { .layout { grid-template-columns: 1fr; } aside { position: static; max-height: 60vh; } }
+  section { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px; }
+  h2 { margin: 0 0 10px; font-size: 13px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+  .display { background: var(--display-bg); color: var(--display-ink); border-radius: 10px; padding: 16px 18px;
+             display: grid; gap: 8px; }
+  .freq { font: 600 clamp(36px, 9vw, 64px)/1 ui-monospace, "JetBrains Mono", monospace; letter-spacing: .02em; }
+  .freq small { font-size: .4em; opacity: .7; margin-left: 6px; }
+  .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .tag { border: 1px solid currentColor; border-radius: 6px; padding: 2px 8px; font-size: 14px; }
+  .tx { color: var(--tx); font-weight: 700; visibility: hidden; }
+  .tx.on { visibility: visible; }
+  .meter { height: 10px; background: #1e2a36; border-radius: 5px; overflow: hidden; }
+  .meter > div { height: 100%; width: 0; background: linear-gradient(90deg, #3ad07a, #e8c547 70%, #ff5a4f); transition: width .3s; }
+  button { font: inherit; border: 1px solid var(--line); background: var(--panel); color: var(--ink);
+           border-radius: 10px; padding: 10px 14px; cursor: pointer; min-height: 44px; }
+  button:hover { border-color: var(--accent); }
+  button.active { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+  .profiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px; }
+  .profiles button { min-height: 76px; text-align: left; display: grid; grid-template-columns: auto 1fr; gap: 2px 10px; align-items: center; }
+  .profiles .ic { grid-row: span 2; font-size: 28px; }
+  .profiles b { font-size: 16px; }
+  .profiles span { font-size: 13px; color: var(--muted); }
+  .profiles button.active span { color: inherit; opacity: .85; }
+  .presets { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+  .presets button { text-align: left; }
+  .presets b { display: block; }
+  .presets span { font-size: 13px; color: var(--muted); }
+  input[type=text] { font: 600 20px ui-monospace, monospace; padding: 10px; border-radius: 10px; width: 11em;
+                     border: 1px solid var(--line); background: var(--panel); color: var(--ink); }
+  input[type=range] { width: 100%; }
+  label { display: grid; gap: 4px; font-size: 14px; color: var(--muted); }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media (max-width: 560px) { .grid2 { grid-template-columns: 1fr; } }
+  .status { font-size: 13px; color: var(--muted); }
+  dialog { width: min(640px, calc(100vw - 32px)); max-height: calc(100vh - 48px); border: 1px solid var(--line);
+           border-radius: 14px; background: var(--panel); color: var(--ink); padding: 18px; }
+  dialog::backdrop { background: rgba(0,0,0,.45); }
+  .set-group { margin: 14px 0 6px; font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+  .set-row { display: grid; grid-template-columns: 1fr 220px; gap: 10px; align-items: center; padding: 8px 0;
+             border-bottom: 1px solid var(--line); }
+  .set-row select, .set-row input[type=number] { font: inherit; padding: 6px 8px; border-radius: 8px; width: 100%;
+             border: 1px solid var(--line); background: var(--bg); color: var(--ink); }
+  .set-row .rng { display: grid; grid-template-columns: 1fr 56px; gap: 8px; align-items: center; }
+  .set-row small { display: block; color: var(--tx); font-size: 12px; }
+  .saved { color: var(--ok) !important; }
+  .failed { color: var(--tx) !important; }
+  .set-sections { display: flex; flex-wrap: wrap; gap: 6px; margin: 2px 0 8px; }
+  .set-sections button { min-height: 30px; padding: 3px 10px; font-size: 13px; border-radius: 999px; }
+  .set-sections button span { opacity: .65; margin-left: 4px; font-size: 12px; }
+  .set-row .desc { display: block; font-size: 12px; color: var(--muted); }
+  .set-row .ro { font: 14px ui-monospace, monospace; color: var(--muted); }
+  .set-row input.free { font: 15px ui-monospace, monospace; padding: 6px 8px; border-radius: 8px; width: 100%;
+                        border: 1px solid var(--line); background: var(--bg); color: var(--ink); }
+  @media (max-width: 560px) { .set-row { grid-template-columns: 1fr; } }
+  .bad { color: var(--tx); }
+  /* Station branding (callsign comes from config) */
+  .display { position: relative; overflow: hidden;
+             background: radial-gradient(120% 140% at 100% 0%, #16324a 0%, transparent 55%), var(--display-bg);
+             border: 1px solid #1f3a52; }
+  .display::after { content: attr(data-call); position: absolute; right: -6px; bottom: -18px; font: 800 110px/1 ui-monospace, monospace;
+                    color: #7ee2a8; opacity: .045; letter-spacing: .04em; pointer-events: none; }
+  .brand { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap;
+           padding-bottom: 6px; border-bottom: 1px solid #1f3a52; margin-bottom: 2px; }
+  .call { display: flex; align-items: center; gap: 10px; }
+  .call b { font: 800 26px/1 ui-monospace, "JetBrains Mono", monospace; letter-spacing: .12em; color: #fff;
+            text-shadow: 0 0 14px rgba(126, 226, 168, .55); }
+  .call .sub { font-size: 13px; color: #8fb3c9; letter-spacing: .04em; }
+  .waves { position: relative; width: 22px; height: 22px; }
+  .waves i { position: absolute; inset: 0; border: 2px solid #7ee2a8; border-radius: 50%; opacity: 0;
+             animation: ping 2.4s ease-out infinite; }
+  .waves i:nth-child(2) { animation-delay: .8s; } .waves i:nth-child(3) { animation-delay: 1.6s; }
+  .waves::after { content: ""; position: absolute; left: 8px; top: 8px; width: 6px; height: 6px; border-radius: 50%; background: #7ee2a8; }
+  @keyframes ping { 0% { transform: scale(.2); opacity: .9; } 100% { transform: scale(1.4); opacity: 0; } }
+  .display.onair .waves i { border-color: var(--tx); animation-duration: .8s; }
+  .display.onair .waves::after { background: var(--tx); }
+  .display.onair { border-color: var(--tx); box-shadow: 0 0 0 1px var(--tx), 0 0 24px rgba(255, 90, 79, .35); }
+  .clocks { display: flex; gap: 16px; font: 14px ui-monospace, monospace; color: #cfe3ef; }
+  .clocks em { font-style: normal; font-size: 11px; color: #8fb3c9; letter-spacing: .08em; margin-right: 4px; }
+  @media (prefers-reduced-motion: reduce) { .waves i { animation: none; opacity: .5; } }
+  /* Caller lookup */
+  .caller { border-bottom: 1px solid var(--line); padding-bottom: 10px; margin-bottom: 10px; flex-shrink: 0; }
+  .caller .hint { text-transform: none; letter-spacing: 0; font-weight: 400; }
+  .caller-card { margin-top: 8px; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--line);
+                 background: linear-gradient(135deg, rgba(76,141,255,.10), transparent 60%), var(--bg); }
+  .caller-card .cc-top { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+  .caller-card .cc-call { font: 800 22px/1.1 ui-monospace, monospace; letter-spacing: .06em; }
+  .caller-card .cc-class { font-size: 12px; border: 1px solid currentColor; border-radius: 999px; padding: 1px 8px; color: var(--accent); }
+  .caller-card .cc-name { font-weight: 600; margin-top: 2px; }
+  .caller-card .cc-meta { font-size: 13px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 4px 12px; margin-top: 4px; }
+  .caller-card .cc-dist { font: 600 15px ui-monospace, monospace; margin-top: 6px; display: flex; align-items: center; gap: 8px; }
+  .caller-card .arrow { display: inline-block; transition: transform .4s; color: var(--accent); }
+  .caller-card a { color: var(--accent); font-size: 12px; }
+  .caller-card.err { color: var(--tx); font-size: 14px; }
+  .caller-recent { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px; }
+  .caller-recent button { min-height: 26px; padding: 2px 8px; font: 12px ui-monospace, monospace; border-radius: 999px; }
+  /* Fit-to-window layout: only the memories list scrolls */
+  html, body { height: 100%; }
+  body { overflow: hidden; }
+  .layout { height: 100vh; padding: 12px; gap: 12px; grid-template-rows: 100%; max-width: 1500px; }
+  main { overflow-y: auto; gap: 10px; align-content: start;
+         grid-template-columns: 1fr 1fr;
+         grid-template-areas: "display display" "quick quick" "presets freqsec" "mode rptr" "levels levels" "foot foot"; }
+  section { padding: 10px 12px; }
+  h2 { margin: 0 0 6px; }
+  .display { padding: 10px 14px; gap: 4px; }
+  .freq { font-size: clamp(30px, 6vh, 56px); }
+  button { min-height: 36px; padding: 6px 12px; }
+  .profiles { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 8px; }
+  .profiles button { min-height: 52px; }
+  .profiles .ic { font-size: 22px; }
+  .presets { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 6px; }
+  input[type=text] { font-size: 17px; padding: 6px 8px; width: 8em; }
+  aside { position: static; height: 100%; max-height: none; min-height: 0; }
+  .memlist { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 3px; }
+  .memlist .mem { flex-shrink: 0; min-height: 48px; padding: 6px 10px; }
+  .memlist h3 { flex-shrink: 0; }
+  .grid2 label { display: block; }
+  .grid2 label input[type=range] { display: block; margin-top: 6px; }
+  [data-step] { padding: 6px 9px; }
+  .set-row .rng { grid-template-columns: 1fr 70px; }
+  @media (max-height: 820px) {
+    main { gap: 8px; } section { padding: 8px 10px; } h2 { margin-bottom: 4px; }
+    .freq { font-size: clamp(28px, 5.5vh, 48px); }
+    .profiles button { min-height: 46px; }
+  }
+  @media (max-width: 1100px) {
+    main { grid-template-columns: 1fr; grid-template-areas: "display" "quick" "presets" "freqsec" "mode" "rptr" "levels" "foot"; }
+    .profiles { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 900px) {
+    body { overflow: auto; } .layout { height: auto; grid-template-rows: auto; }
+    main { overflow: visible; } aside { height: 60vh; }
+  }
+</style>
+</head>
+<body>
+<div class="layout">
+<main>
+  <section class="display" aria-live="polite" style="grid-area:display">
+    <div class="brand">
+      <div class="call">
+        <span class="waves" aria-hidden="true"><i></i><i></i><i></i></span>
+        <b id="my-call">&nbsp;</b>
+        <span class="sub" id="my-sub">FT-991A</span>
+      </div>
+      <div class="clocks">
+        <span><em>UTC</em> <b id="utc">--:--:--</b></span>
+        <span><em>LOCAL</em> <b id="local">--:--</b></span>
+      </div>
+    </div>
+    <div class="row" style="justify-content:space-between">
+      <span class="tag" id="mode">—</span>
+      <span class="tx" id="tx">● ON THE AIR</span>
+    </div>
+    <div class="freq" id="freq">---.---.---<small>MHz</small></div>
+    <div class="row" style="font-size:14px; gap:14px">
+      <span id="pwr">— W</span><span id="shift">—</span><span id="tone">Tone off</span>
+    </div>
+    <div class="meter" title="S-meter"><div id="smeter"></div></div>
+  </section>
+
+  <section style="grid-area:quick">
+    <h2>Quick Setup</h2>
+    <div class="profiles" id="profiles"></div>
+  </section>
+
+  <section style="grid-area:presets">
+    <h2>Presets</h2>
+    <div class="presets" id="presets"></div>
+    <div class="row" style="margin-top:6px">
+      <button id="save-preset">＋ Save current as preset</button>
+      <button id="del-preset">Remove a preset…</button>
+    </div>
+  </section>
+
+  <section style="grid-area:freqsec">
+    <h2>Frequency</h2>
+    <div class="row">
+      <input type="text" id="freq-in" inputmode="decimal" placeholder="146.520" aria-label="Frequency in MHz">
+      <button id="go" class="active">Tune</button>
+      <span style="flex:1"></span>
+      <button data-step="-25000">▼ 25k</button><button data-step="-5000">▼ 5k</button>
+      <button data-step="5000">▲ 5k</button><button data-step="25000">▲ 25k</button>
+    </div>
+  </section>
+
+  <section style="grid-area:mode">
+    <h2>Mode</h2>
+    <div class="row" id="modes"></div>
+  </section>
+
+  <section class="grid2" style="grid-area:levels; grid-template-columns: repeat(3, 1fr)">
+    <label>Volume: <b id="vol-v">—</b>
+      <input type="range" id="vol-in" min="0" max="255"></label>
+    <label>Power: <b id="pwr-v">—</b> W
+      <input type="range" id="pwr-in" min="5" max="100" step="5"></label>
+    <label>Squelch: <b id="sq-v">—</b> (0 = open, needed for VARA)
+      <input type="range" id="sq-in" min="0" max="100"></label>
+  </section>
+
+  <section style="grid-area:rptr">
+    <h2>Repeater</h2>
+    <div class="row">
+      <button data-shift="simplex">Simplex</button><button data-shift="+">＋ Shift</button><button data-shift="-">− Shift</button>
+      <span style="flex:1"></span>
+      <label style="display:flex; gap:6px; align-items:center">Tone
+        <select id="tone-in" style="font:inherit; padding:8px; border-radius:8px"></select></label>
+    </div>
+  </section>
+
+  <div class="row" style="grid-area:foot; justify-content:space-between">
+    <div class="status" id="status">Connecting to radio…</div>
+    <button id="open-settings">⚙ Radio Settings</button>
+  </div>
+</main>
+<aside>
+  <div class="caller">
+    <h2 style="margin:0 0 6px">Caller Lookup <span class="hint">· Fusion / any US call</span></h2>
+    <form id="lookup-form" class="row" style="gap:6px; flex-wrap:nowrap">
+      <input type="text" id="lookup-in" placeholder="Callsign" autocomplete="off" spellcheck="false"
+             aria-label="Callsign to look up" style="flex:1; width:auto; text-transform:uppercase; font-size:16px">
+      <button type="submit" class="active" style="white-space:nowrap">Look up</button>
+    </form>
+    <div id="caller-card" class="caller-card" hidden></div>
+    <div id="caller-recent" class="caller-recent"></div>
+  </div>
+  <div class="row" style="justify-content:space-between; margin-bottom:8px">
+    <h2 style="margin:0">Radio Memories</h2>
+    <button id="mem-refresh" title="Re-read memories from the radio" style="min-height:32px; padding:4px 10px">↻</button>
+  </div>
+  <input type="search" id="mem-filter" placeholder="Search name or frequency…" aria-label="Search memories">
+  <div class="memlist" id="memlist"><div class="status">Reading memories from radio…</div></div>
+</aside>
+</div>
+<dialog id="settings-dlg">
+  <div class="row" style="justify-content:space-between; margin-bottom:6px">
+    <h2 style="margin:0">Radio Settings</h2>
+    <button id="close-settings" aria-label="Close" style="min-height:32px; padding:4px 12px">✕</button>
+  </div>
+  <p class="status" style="margin:0 0 8px">Changes are sent to the radio immediately (label flashes green). Menu numbers match the radio's MENU screen.</p>
+  <input type="search" id="set-filter" placeholder="Search settings — e.g. 075, squelch, VOX, data…" aria-label="Search settings"
+         style="font:inherit; width:100%; padding:8px 10px; border-radius:8px; border:1px solid var(--line); background:var(--bg); color:var(--ink); margin-bottom:6px">
+  <div class="set-sections" id="set-sections" role="tablist" aria-label="Settings sections"></div>
+  <div id="settings-body" style="overflow-y:auto; max-height:calc(100vh - 270px)"><div class="status">Reading settings from radio…</div></div>
+</dialog>
+<script>
+const MODES = ["FM", "DATA-FM", "FM-N", "C4FM", "USB", "LSB", "DATA-USB", "AM", "CW"];
+const TONES = [67.0,69.3,71.9,74.4,77.0,79.7,82.5,85.4,88.5,91.5,94.8,97.4,100.0,103.5,107.2,110.9,114.8,118.8,123.0,127.3,131.8,136.5,141.3,146.2,151.4,156.7,159.8,162.2,165.5,167.9,171.3,173.8,177.3,179.9,183.5,186.2,189.9,192.8,196.6,199.5,203.5,206.5,210.7,218.1,225.7,229.1,233.6,241.8,250.3,254.1];
+let st = {}, presets = [], profiles = [], mems = [], dragging = false;
+const $ = id => document.getElementById(id);
+const post = (p, b) => fetch(p, {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(b)}).then(refresh);
+const fmt = hz => { const s = String(hz).padStart(9, "0"); return `${+s.slice(0,3)}.${s.slice(3,6)}.${s.slice(6,9)}`; };
+
+$("modes").innerHTML = MODES.map(m => `<button data-mode="${m}">${m}</button>`).join("");
+$("tone-in").innerHTML = `<option value="">Off</option>` + TONES.map(t => `<option value="${t}">${t.toFixed(1)} Hz</option>`).join("");
+
+document.addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b) return;
+  if (b.dataset.mode) post("/api/mode", {mode: b.dataset.mode});
+  if (b.dataset.step && st.freq) post("/api/freq", {hz: st.freq + +b.dataset.step});
+  if (b.dataset.shift) post("/api/shift", {shift: b.dataset.shift});
+  if (b.dataset.preset !== undefined) post("/api/preset", presets[+b.dataset.preset]);
+  if (b.dataset.profile !== undefined) post("/api/preset", profiles[+b.dataset.profile]);
+  if (b.dataset.ch) post("/api/recall", {ch: +b.dataset.ch});
+});
+function tune() {
+  const v = parseFloat($("freq-in").value.replace(/[^0-9.]/g, ""));
+  if (v > 0) { post("/api/freq", {hz: Math.round(v * 1e6)}); $("freq-in").value = ""; }
+}
+$("go").onclick = tune;
+$("freq-in").addEventListener("keydown", e => { if (e.key === "Enter") tune(); });
+for (const [id, path, key] of [["pwr-in", "/api/power", "watts"], ["sq-in", "/api/squelch", "level"]]) {
+  $(id).addEventListener("pointerdown", () => dragging = true);
+  $(id).addEventListener("change", e => { dragging = false; post(path, {[key]: +e.target.value}); });
+}
+$("tone-in").onchange = e => post("/api/tone", {hz: e.target.value || null});
+
+function renderProfiles() {
+  $("profiles").innerHTML = profiles.map((p, i) =>
+    `<button data-profile="${i}"><span class="ic">${p.icon || "📻"}</span><b>${p.name}</b>` +
+    `<span>${fmt(p.freq)} · ${p.mode}${p.tone ? " · " + p.tone + " Hz" : ""} · SQL ${p.squelch ?? "–"} · ${p.power ?? "–"} W</span></button>`).join("");
+}
+function markProfile() {
+  document.querySelectorAll("[data-profile]").forEach(b => {
+    const p = profiles[+b.dataset.profile];
+    b.classList.toggle("active", !!st.ok && p.freq === st.freq && p.mode === st.mode &&
+      (p.squelch == null || p.squelch === st.squelch) && (!!p.tone === !!st.tone_mode));
+  });
+}
+function band(f) {
+  if (f >= 118e6 && f < 137e6) return "Airband";
+  if (f >= 144e6 && f < 148e6) return "2 m";
+  if (f >= 420e6 && f < 450e6) return "70 cm";
+  if (f < 30e6) return "HF";
+  if (f >= 50e6 && f < 54e6) return "6 m";
+  return "Other";
+}
+function renderMems() {
+  const q = $("mem-filter").value.trim().toLowerCase();
+  const list = mems.filter(m => !q || (m.name + " " + fmt(m.freq) + " " + m.ch).toLowerCase().includes(q));
+  if (!list.length) { $("memlist").innerHTML = `<div class="status">${mems.length ? "No matches" : "No memories found"}</div>`; return; }
+  let html = "", last = "";
+  for (const m of list) {
+    const b = band(m.freq);
+    if (b !== last) { html += `<h3>${b}</h3>`; last = b; }
+    const extra = [m.mode, m.shift !== "simplex" ? m.shift : "", m.tone ? "tone" : ""].filter(Boolean).join(" · ");
+    html += `<button class="mem" data-ch="${m.ch}" data-freq="${m.freq}"><span class="n">${String(m.ch).padStart(3, "0")}</span>` +
+            `<span><span class="t">${m.name || "(no name)"}</span><br><span class="f">${fmt(m.freq)}</span></span><span class="m">${extra}</span></button>`;
+  }
+  $("memlist").innerHTML = html;
+  markMem();
+}
+function markMem() {
+  document.querySelectorAll(".mem").forEach(b => b.classList.toggle("active", !!st.ok && +b.dataset.freq === st.freq));
+}
+function loadMems(refresh) {
+  $("memlist").innerHTML = `<div class="status">Reading memories from radio…</div>`;
+  fetch("/api/memories" + (refresh ? "?refresh=1" : "")).then(r => r.json()).then(m => {
+    mems = m.sort((a, b) => band(a.freq).localeCompare(band(b.freq)) || a.freq - b.freq); renderMems();
+  });
+}
+$("mem-filter").oninput = renderMems;
+$("vol-in").addEventListener("pointerdown", () => dragging = true);
+$("vol-in").addEventListener("change", e => { dragging = false; post("/api/volume", {level: +e.target.value}); });
+$("vol-in").oninput = e => $("vol-v").textContent = e.target.value;
+$("set-filter").oninput = () => renderSettings();
+$("open-settings").onclick = () => { $("settings-dlg").showModal(); loadSettings(); };
+$("close-settings").onclick = () => $("settings-dlg").close();
+let settingsList = [], setSection = "All";
+const sectionOf = it => it.group.replace(/^(Front panel|Menu) - /, (m, a) => a === "Front panel" ? "Front panel: " : "");
+function renderSections() {
+  const counts = {};
+  for (const it of settingsList) { const k = sectionOf(it); counts[k] = (counts[k] || 0) + 1; }
+  const names = ["All", ...Object.keys(counts)];
+  $("set-sections").innerHTML = names.map(n =>
+    `<button role="tab" data-section="${esc(n)}" class="${n === setSection ? "active" : ""}" aria-selected="${n === setSection}">` +
+    `${esc(n)}<span>${n === "All" ? settingsList.length : counts[n]}</span></button>`).join("");
+}
+$("set-sections").addEventListener("click", e => {
+  const b = e.target.closest("button[data-section]"); if (!b) return;
+  setSection = b.dataset.section; renderSections(); renderSettings(); $("settings-body").scrollTop = 0;
+});
+function loadSettings() {
+  $("settings-body").innerHTML = `<div class="status">Reading all 160 settings from the radio…</div>`;
+  fetch("/api/settings").then(r => r.json()).then(list => { settingsList = list; renderSections(); renderSettings(); });
+}
+const esc = t => String(t ?? "").replace(/[&<>"]/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"}[c]));
+function renderSettings() {
+  const q = $("set-filter").value.trim().toLowerCase();
+  let html = "", g = "";
+  for (const it of settingsList) {
+    if (setSection !== "All" && sectionOf(it) !== setSection) continue;
+    if (q && !(it.label + " " + it.group + " " + (it.desc || "")).toLowerCase().includes(q)) continue;
+    if (it.group !== g) { html += `<div class="set-group">${esc(sectionOf(it))}</div>`; g = it.group; }
+    let ctl;
+    if (it.readonly) {
+      ctl = `<span class="ro">${esc(it.value ?? "—")}</span>`;
+    } else if (it.options) {
+      const known = Object.keys(it.options).includes(String(it.value));
+      ctl = `<select data-key="${it.key}">` + (known ? "" : `<option selected>${esc(it.value ?? "?")} (unknown)</option>`) +
+        Object.entries(it.options).map(([v, l]) =>
+        `<option value="${v}"${String(it.value) === v ? " selected" : ""}>${esc(l)}</option>`).join("") + `</select>`;
+    } else if (it.range) {
+      const st = it.step || 1;
+      ctl = `<div class="rng"><input type="range" data-key="${it.key}" min="${it.range[0]}" max="${it.range[1]}" step="${st}" value="${it.value ?? it.range[0]}">` +
+            `<input type="number" data-key="${it.key}" min="${it.range[0]}" max="${it.range[1]}" step="${st}" value="${it.value ?? ""}"></div>`;
+    } else {
+      ctl = `<input type="text" class="free" data-key="${it.key}" value="${esc(it.value)}" title="${esc(it.desc)}">`;
+    }
+    html += `<div class="set-row"><label>${esc(it.label)}` +
+            (it.desc && !it.options ? `<span class="desc">${esc(it.desc)}</span>` : "") +
+            (it.warn ? `<small>${esc(it.warn)}</small>` : "") + `</label>${ctl}</div>`;
+  }
+  $("settings-body").innerHTML = html || `<div class="status">No settings match “${esc(q)}”.</div>`;
+}
+$("settings-body").addEventListener("input", e => {
+  const k = e.target.dataset.key; if (!k || e.target.tagName === "SELECT") return;
+  e.target.closest(".rng").querySelectorAll("input").forEach(i => { if (i !== e.target) i.value = e.target.value; });
+});
+$("settings-body").addEventListener("change", e => {
+  const k = e.target.dataset.key; if (!k) return;
+  const row = e.target.closest(".set-row").querySelector("label");
+  fetch("/api/setting", {method: "POST", headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({key: k, value: e.target.value})})
+      .then(r => {
+      row.classList.toggle("saved", r.ok); row.classList.toggle("failed", !r.ok);
+      setTimeout(() => row.classList.remove("saved", "failed"), 1500); refresh();
+    });
+});
+$("mem-refresh").onclick = () => loadMems(true);
+function renderPresets() {
+  $("presets").innerHTML = presets.map((p, i) =>
+    `<button data-preset="${i}"><b>${p.name}</b><span>${fmt(p.freq)} · ${p.mode}${p.tone ? " · " + p.tone + " Hz" : ""}</span></button>`).join("");
+}
+$("save-preset").onclick = () => {
+  if (!st.freq) return;
+  const name = window.prompt("Name for this preset?", `${fmt(st.freq)} ${st.mode}`);
+  if (!name) return;
+  presets.push({name, freq: st.freq, mode: st.mode, tone: st.tone_mode ? st.tone : null, shift: st.shift});
+  fetch("/api/presets", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(presets)}).then(renderPresets);
+};
+$("del-preset").onclick = () => {
+  const name = window.prompt("Type the name of the preset to remove:\n" + presets.map(p => "• " + p.name).join("\n"));
+  const i = presets.findIndex(p => p.name === name); if (i < 0) return;
+  presets.splice(i, 1);
+  fetch("/api/presets", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(presets)}).then(renderPresets);
+};
+
+async function refresh() {
+  try {
+    st = await (await fetch("/api/status")).json();
+  } catch { st = {ok: false}; }
+  if (!st.ok) { $("status").textContent = "Radio not responding — is it on and plugged in?"; $("status").className = "status bad"; return; }
+  $("status").textContent = "Connected to FT-991A"; $("status").className = "status";
+  $("freq").innerHTML = `${fmt(st.freq)}<small>MHz</small>`;
+  $("mode").textContent = st.mode;
+  $("tx").classList.toggle("on", st.tx);
+  document.querySelector(".display").classList.toggle("onair", !!st.tx);
+  $("pwr").textContent = `${st.power} W`;
+  $("shift").textContent = st.shift === "simplex" ? "Simplex" : `Shift ${st.shift}`;
+  $("tone").textContent = st.tone_mode ? `Tone ${st.tone} Hz${st.tone_mode === 1 ? " (squelch)" : ""}` : "Tone off";
+  $("smeter").style.width = Math.min(100, st.smeter / 255 * 100) + "%";
+  markProfile(); markMem();
+  document.querySelectorAll("[data-mode]").forEach(b => b.classList.toggle("active", b.dataset.mode === st.mode));
+  document.querySelectorAll("[data-shift]").forEach(b => b.classList.toggle("active", b.dataset.shift === st.shift));
+  if (!dragging) {
+    $("pwr-in").value = st.power; $("pwr-v").textContent = st.power;
+    $("vol-in").value = st.volume; $("vol-v").textContent = st.volume;
+    $("sq-in").value = st.squelch; $("sq-v").textContent = st.squelch;
+    if (document.activeElement !== $("tone-in")) $("tone-in").value = st.tone_mode ? String(st.tone) : "";
+  }
+}
+$("pwr-in").oninput = e => $("pwr-v").textContent = e.target.value;
+$("sq-in").oninput = e => $("sq-v").textContent = e.target.value;
+fetch("/api/presets").then(r => r.json()).then(p => { presets = p; renderPresets(); });
+fetch("/api/profiles").then(r => r.json()).then(p => { profiles = p; renderProfiles(); markProfile(); });
+const titleCase = t => (t || "").toLowerCase().replace(/\b([a-z])/g, c => c.toUpperCase()).replace(/, ([a-z]{2})$/i, (m, st) => ", " + st.toUpperCase());
+const compass = d => ["N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSW","SW","WSW","W","WNW","NW","NNW"][Math.round(d / 22.5) % 16];
+async function lookup(call) {
+  call = call.trim().toUpperCase(); if (!call) return;
+  const card = $("caller-card"); card.hidden = false; card.className = "caller-card"; card.textContent = `Looking up ${call}…`;
+  let r; try { r = await (await fetch("/api/lookup?call=" + encodeURIComponent(call))).json(); } catch { r = {status: "OFFLINE"}; }
+  if (r.status !== "VALID") {
+    card.className = "caller-card err";
+    card.textContent = r.status === "OFFLINE" ? "Lookup service unreachable — check internet." :
+      r.status === "INVALID" ? `“${call}” isn't a valid callsign.` : `${call} not found (US/FCC callsigns only).`;
+    return;
+  }
+  const dist = r.miles != null ? `<div class="cc-dist"><span class="arrow" style="transform:rotate(${r.bearing}deg)">↑</span>` +
+    `${r.miles} mi · ${compass(r.bearing)} (${r.bearing}°)</div>` : "";
+  card.innerHTML = `<div class="cc-top"><span class="cc-call">${esc(r.call)}</span><span class="cc-class">${esc(r.type === "CLUB" ? "Club" : r.class)}</span></div>` +
+    `<div class="cc-name">${esc(r.name)}</div>` +
+    `<div class="cc-meta"><span>📍 ${esc(titleCase(r.cityState))}</span><span>Grid ${esc(r.grid)}</span>` +
+    (r.trustee ? `<span>Trustee ${esc(r.trustee)}</span>` : "") + `</div>` + dist +
+    (r.uls ? `<div style="margin-top:4px"><a href="${esc(r.uls)}" target="_blank" rel="noopener">FCC license ↗</a> · <a href="https://www.qrz.com/db/${esc(r.call)}" target="_blank" rel="noopener">QRZ ↗</a></div>` : "");
+  $("lookup-in").value = "";
+  loadRecent();
+}
+function loadRecent() {
+  fetch("/api/lookups").then(r => r.json()).then(h => {
+    $("caller-recent").innerHTML = h.slice(0, 8).map(x =>
+      `<button type="button" data-lookup="${esc(x.call)}" title="${esc(x.name)} · ${esc(titleCase(x.cityState))} · ${esc(x.when)}">${esc(x.call)}</button>`).join("");
+  });
+}
+$("lookup-form").onsubmit = e => { e.preventDefault(); lookup($("lookup-in").value); };
+$("caller-recent").addEventListener("click", e => { const b = e.target.closest("[data-lookup]"); if (b) lookup(b.dataset.lookup); });
+loadRecent();
+if (location.hash.startsWith("#lookup=")) lookup(decodeURIComponent(location.hash.slice(8)));
+function tick() {
+  const n = new Date();
+  $("utc").textContent = n.toISOString().slice(11, 19);
+  $("local").textContent = n.toLocaleTimeString([], {hour: "numeric", minute: "2-digit"});
+}
+tick(); setInterval(tick, 1000);
+fetch("/api/config").then(r => r.json()).then(c => {
+  $("my-call").textContent = c.callsign;
+  $("my-sub").textContent = [c.radio, c.grid].filter(Boolean).join(" · ");
+  document.querySelector(".display").dataset.call = c.callsign;
+  document.title = `${c.callsign} · ${c.radio}`;
+});
+if (location.hash === "#settings") { $("settings-dlg").showModal(); loadSettings(); }
+loadMems(false);
+refresh(); setInterval(refresh, 1000);
+</script>
+</body>
+</html>

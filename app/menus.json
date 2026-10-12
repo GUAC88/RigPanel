@@ -1,0 +1,2199 @@
+[
+ {
+  "num": 1,
+  "name": "AGC FAST DELAY",
+  "desc": "20 ~ 4000 msec (P2= 0020 ~ 4000, 20 msec/step)",
+  "digits": 4,
+  "range": [
+   20,
+   4000
+  ],
+  "group": "AGC",
+  "step": 20
+ },
+ {
+  "num": 2,
+  "name": "AGC MID DELAY",
+  "desc": "20 ~ 4000 msec (P2= 0020 ~ 4000, 20 msec/step)",
+  "digits": 4,
+  "range": [
+   20,
+   4000
+  ],
+  "group": "AGC",
+  "step": 20
+ },
+ {
+  "num": 3,
+  "name": "AGC SLOW DELAY",
+  "desc": "20 ~ 4000 msec (P2= 0020 ~ 4000, 20 msec/step)",
+  "digits": 4,
+  "range": [
+   20,
+   4000
+  ],
+  "group": "AGC",
+  "step": 20
+ },
+ {
+  "num": 4,
+  "name": "HOME FUNCTION",
+  "desc": "0: SCOPE 1: FUNCTION",
+  "digits": 1,
+  "options": {
+   "0": "SCOPE",
+   "1": "FUNCTION"
+  },
+  "group": "Display & audio"
+ },
+ {
+  "num": 5,
+  "name": "MY CALL INDICATION",
+  "desc": "0 ~ 5 sec",
+  "digits": 1,
+  "range": [
+   0,
+   5
+  ],
+  "group": "Display & audio"
+ },
+ {
+  "num": 6,
+  "name": "DISPLAY COLOR",
+  "desc": "0: BLUE 1: GRAY 2: GREEN 3: ORANGE 4: PURPLE 5: RED 6: SKY BLUE",
+  "digits": 1,
+  "options": {
+   "0": "BLUE",
+   "1": "GRAY",
+   "2": "GREEN",
+   "3": "ORANGE",
+   "4": "PURPLE",
+   "5": "RED",
+   "6": "SKY BLUE"
+  },
+  "group": "Display & audio"
+ },
+ {
+  "num": 7,
+  "name": "DIMMER LED",
+  "desc": "0: 1 1: 2",
+  "digits": 1,
+  "options": {
+   "0": "1",
+   "1": "2"
+  },
+  "group": "Display & audio"
+ },
+ {
+  "num": 8,
+  "name": "DIMMER TFT",
+  "desc": "00 ~ 15",
+  "digits": 2,
+  "range": [
+   0,
+   15
+  ],
+  "group": "Display & audio"
+ },
+ {
+  "num": 9,
+  "name": "BAR MTR PEAK HOLD",
+  "desc": "0: OFF 1: 0.5 sec 2: 1.0 sec 3: 2.0 sec",
+  "digits": 1,
+  "options": {
+   "0": "OFF",
+   "1": "0.5 sec",
+   "2": "1.0 sec",
+   "3": "2.0 sec"
+  },
+  "group": "Display & audio"
+ },
+ {
+  "num": 10,
+  "name": "DVS RX OUT LEVEL",
+  "desc": "0 ~ 100 (P2 = 000 ~ 100)",
+  "digits": 3,
+  "range": [
+   0,
+   100
+  ],
+  "group": "Display & audio"
+ },
+ {
+  "num": 11,
+  "name": "DVS TX OUT LEVEL",
+  "desc": "0 ~ 100 (P2 = 000 ~ 100)",
+  "digits": 3,
+  "range": [
+   0,
+   100
+  ],
+  "group": "Display & audio"
+ },
+ {
+  "num": 12,
+  "name": "KEYER TYPE",
+  "desc": "0: OFF 1: BUG 2: ELEKEY-A 3: ELEKEY-B 4: ELEKEY-Y 5: ACS",
+  "digits": 1,
+  "options": {
+   "0": "OFF",
+   "1": "BUG",
+   "2": "ELEKEY-A",
+   "3": "ELEKEY-B",
+   "4": "ELEKEY-Y",
+   "5": "ACS"
+  },
+  "group": "CW keyer"
+ },
+ {
+  "num": 13,
+  "name": "KEYER DOT/DASH",
+  "desc": "0: NORMAL 1: REVERSE",
+  "digits": 1,
+  "options": {
+   "0": "NORMAL",
+   "1": "REVERSE"
+  },
+  "group": "CW keyer"
+ },
+ {
+  "num": 14,
+  "name": "CW WEIGHT",
+  "desc": "2.5 ~ 4.5 (P2 = 25 ~ 45)",
+  "digits": 2,
+  "range": [
+   25,
+   45
+  ],
+  "group": "CW keyer"
+ },
+ {
+  "num": 15,
+  "name": "BEACON INTERVAL",
+  "desc": "OFF / 1 ~ 690 sec (P2 = 000 ~ 690, 000: OFF)",
+  "digits": 3,
+  "range": [
+   0,
+   690
+  ],
+  "group": "CW keyer"
+ },
+ {
+  "num": 16,
+  "name": "NUMBER STYLE",
+  "desc": "0: 1290 1: AUNO 2: AUNT 3: A2NO 4: A2NT 5: 12NO 6: 12NT",
+  "digits": 1,
+  "options": {
+   "0": "1290",
+   "1": "AUNO",
+   "2": "AUNT",
+   "3": "A2NO",
+   "4": "A2NT",
+   "5": "12NO",
+   "6": "12NT"
+  },
+  "group": "CW keyer"
+ },
+ {
+  "num": 17,
+  "name": "CONTEST NUMBER",
+  "desc": "0000 ~ 9999",
+  "digits": 4,
+  "range": [
+   0,
+   9999
+  ],
+  "group": "CW keyer"
+ },
+ {
+  "num": 18,
+  "name": "CW MEMORY 1",
+  "desc": "0: TEXT 1: MESSAGE",
+  "digits": 1,
+  "options": {
+   "0": "TEXT",
+   "1": "MESSAGE"
+  },
+  "group": "CW keyer"
+ },
+ {
+  "num": 19,
+  "name": "CW MEMORY 2",
+  "desc": "0: TEXT 1: MESSAGE",
+  "digits": 1,
+  "options": {
+   "0": "TEXT",
+   "1": "MESSAGE"
+  },
+  "group": "CW keyer"
+ },
+ {
+  "num": 20,
+  "name": "CW MEMORY 3",
+  "desc": "0: TEXT 1: MESSAGE",
+  "digits": 1,
+  "options": {
+   "0": "TEXT",
+   "1": "MESSAGE"
+  },
+  "group": "CW keyer"
+ },
+ {
+  "num": 21,
+  "name": "CW MEMORY 4",
+  "desc": "0: TEXT 1: MESSAGE",
+  "digits": 1,
+  "options": {
+   "0": "TEXT",
+   "1": "MESSAGE"
+  },
+  "group": "CW keyer"
+ },
+ {
+  "num": 22,
+  "name": "CW MEMORY 5",
+  "desc": "0: TEXT 1: MESSAGE",
+  "digits": 1,
+  "options": {
+   "0": "TEXT",
+   "1": "MESSAGE"
+  },
+  "group": "CW keyer"
+ },
+ {
+  "num": 23,
+  "name": "NB WIDTH",
+  "desc": "0: 1 ms 1: 3 ms 2: 10 ms",
+  "digits": 1,
+  "options": {
+   "0": "1 ms",
+   "1": "3 ms",
+   "2": "10 ms"
+  },
+  "group": "Noise blanker & beep"
+ },
+ {
+  "num": 24,
+  "name": "NB REJECTION",
+  "desc": "0: 10 dB 1: 30 dB 2: 50 dB",
+  "digits": 1,
+  "options": {
+   "0": "10 dB",
+   "1": "30 dB",
+   "2": "50 dB"
+  },
+  "group": "Noise blanker & beep"
+ },
+ {
+  "num": 25,
+  "name": "NB LEVEL",
+  "desc": "0 ~ 10 (P2 = 00 ~ 10)",
+  "digits": 2,
+  "range": [
+   0,
+   10
+  ],
+  "group": "Noise blanker & beep"
+ },
+ {
+  "num": 26,
+  "name": "BEEP LEVEL",
+  "desc": "0 ~ 100 (P2 = 000 ~ 100)",
+  "digits": 3,
+  "range": [
+   0,
+   100
+  ],
+  "group": "Noise blanker & beep"
+ },
+ {
+  "num": 27,
+  "name": "TIME ZONE",
+  "desc": "UTC -12:00 ~ +14:00",
+  "digits": 5,
+  "group": "GPS, CAT & memory"
+ },
+ {
+  "num": 28,
+  "name": "GPS/232C SELECT",
+  "desc": "0: GPS1 1: GPS2 3: RS232C",
+  "digits": 1,
+  "options": {
+   "0": "GPS1",
+   "1": "GPS2",
+   "3": "RS232C"
+  },
+  "group": "GPS, CAT & memory"
+ },
+ {
+  "num": 29,
+  "name": "232C RATE",
+  "desc": "0: 4800 bps 1: 9600 bps 2: 19200 bps 3: 38400 bps",
+  "digits": 1,
+  "options": {
+   "0": "4800 bps",
+   "1": "9600 bps",
+   "2": "19200 bps",
+   "3": "38400 bps"
+  },
+  "group": "GPS, CAT & memory"
+ },
+ {
+  "num": 30,
+  "name": "232C TOT",
+  "desc": "0: 10 msec 1: 100 msec 2: 1000 msec 3: 3000 msec",
+  "digits": 1,
+  "options": {
+   "0": "10 msec",
+   "1": "100 msec",
+   "2": "1000 msec",
+   "3": "3000 msec"
+  },
+  "group": "GPS, CAT & memory"
+ },
+ {
+  "num": 31,
+  "name": "CAT RATE",
+  "desc": "0: 4800 bps 1: 9600 bps 2: 19200 bps 3: 38400 bps",
+  "digits": 1,
+  "options": {
+   "0": "4800 bps",
+   "1": "9600 bps",
+   "2": "19200 bps",
+   "3": "38400 bps"
+  },
+  "warn": "Must stay 38400 - other values cut off this panel and VARA.",
+  "group": "GPS, CAT & memory"
+ },
+ {
+  "num": 32,
+  "name": "CAT TOT",
+  "desc": "0: 10 msec 1: 100 msec 2: 1000 msec 3: 3000 msec",
+  "digits": 1,
+  "options": {
+   "0": "10 msec",
+   "1": "100 msec",
+   "2": "1000 msec",
+   "3": "3000 msec"
+  },
+  "warn": "Changing can break CAT control.",
+  "group": "GPS, CAT & memory"
+ },
+ {
+  "num": 33,
+  "name": "CAT RTS",
+  "desc": "0: DISABLE 1: ENABLE",
+  "digits": 1,
+  "options": {
+   "0": "DISABLE",
+   "1": "ENABLE"
+  },
+  "warn": "Changing can break CAT control.",
+  "group": "GPS, CAT & memory"
+ },
+ {
+  "num": 34,
+  "name": "MEM GROUP",
+  "desc": "0: DISABLE 1: ENABLE",
+  "digits": 1,
+  "options": {
+   "0": "DISABLE",
+   "1": "ENABLE"
+  },
+  "group": "GPS, CAT & memory"
+ },
+ {
+  "num": 35,
+  "name": "QUICK SPLIT FREQ",
+  "desc": "-20 kHz ~ +00 (or -00) ~ +20 kHz (P2= -20 ~ +00 or -00 ~ +20)",
+  "digits": 3,
+  "group": "General"
+ },
+ {
+  "num": 36,
+  "name": "TX TOT",
+  "desc": "0 (OFF) ~ 30 min (P2= 00 ~ 30)",
+  "digits": 2,
+  "range": [
+   0,
+   30
+  ],
+  "group": "General"
+ },
+ {
+  "num": 37,
+  "name": "MIC SCAN",
+  "desc": "0: DISABLE 1: ENABLE",
+  "digits": 1,
+  "options": {
+   "0": "DISABLE",
+   "1": "ENABLE"
+  },
+  "group": "General"
+ },
+ {
+  "num": 38,
+  "name": "MIC SCAN RESUME",
+  "desc": "0: PAUSE 1: TIME",
+  "digits": 1,
+  "options": {
+   "0": "PAUSE",
+   "1": "TIME"
+  },
+  "group": "General"
+ },
+ {
+  "num": 39,
+  "name": "REF FREQ ADJ",
+  "desc": "-25 ~ +00 (or -00) ~ +25 (P2= -25 ~ +00 or -00 ~ +25)",
+  "digits": 3,
+  "group": "General"
+ },
+ {
+  "num": 40,
+  "name": "CLAR MODE SELECT",
+  "desc": "0: RX 1: TX 2: TRX",
+  "digits": 1,
+  "options": {
+   "0": "RX",
+   "1": "TX",
+   "2": "TRX"
+  },
+  "group": "General"
+ },
+ {
+  "num": 41,
+  "name": "AM LCUT FREQ",
+  "desc": "00: OFF 01: 100 Hz ~ 19: 1000 Hz (50 Hz steps)",
+  "digits": 2,
+  "options": {
+   "00": "OFF",
+   "01": "100 Hz",
+   "02": "150 Hz",
+   "03": "200 Hz",
+   "04": "250 Hz",
+   "05": "300 Hz",
+   "06": "350 Hz",
+   "07": "400 Hz",
+   "08": "450 Hz",
+   "09": "500 Hz",
+   "10": "550 Hz",
+   "11": "600 Hz",
+   "12": "650 Hz",
+   "13": "700 Hz",
+   "14": "750 Hz",
+   "15": "800 Hz",
+   "16": "850 Hz",
+   "17": "900 Hz",
+   "18": "950 Hz",
+   "19": "1000 Hz"
+  },
+  "group": "AM"
+ },
+ {
+  "num": 42,
+  "name": "AM LCUT SLOPE",
+  "desc": "0: 6 dB/oct 1: 18 dB/oct",
+  "digits": 1,
+  "options": {
+   "0": "6 dB/oct",
+   "1": "18 dB/oct"
+  },
+  "group": "AM"
+ },
+ {
+  "num": 43,
+  "name": "AM HCUT FREQ",
+  "desc": "00: OFF 01: 700 Hz ~ 67: 4000 Hz (50 Hz steps)",
+  "digits": 2,
+  "options": {
+   "00": "OFF",
+   "01": "700 Hz",
+   "02": "750 Hz",
+   "03": "800 Hz",
+   "04": "850 Hz",
+   "05": "900 Hz",
+   "06": "950 Hz",
+   "07": "1000 Hz",
+   "08": "1050 Hz",
+   "09": "1100 Hz",
+   "10": "1150 Hz",
+   "11": "1200 Hz",
+   "12": "1250 Hz",
+   "13": "1300 Hz",
+   "14": "1350 Hz",
+   "15": "1400 Hz",
+   "16": "1450 Hz",
+   "17": "1500 Hz",
+   "18": "1550 Hz",
+   "19": "1600 Hz",
+   "20": "1650 Hz",
+   "21": "1700 Hz",
+   "22": "1750 Hz",
+   "23": "1800 Hz",
+   "24": "1850 Hz",
+   "25": "1900 Hz",
+   "26": "1950 Hz",
+   "27": "2000 Hz",
+   "28": "2050 Hz",
+   "29": "2100 Hz",
+   "30": "2150 Hz",
+   "31": "2200 Hz",
+   "32": "2250 Hz",
+   "33": "2300 Hz",
+   "34": "2350 Hz",
+   "35": "2400 Hz",
+   "36": "2450 Hz",
+   "37": "2500 Hz",
+   "38": "2550 Hz",
+   "39": "2600 Hz",
+   "40": "2650 Hz",
+   "41": "2700 Hz",
+   "42": "2750 Hz",
+   "43": "2800 Hz",
+   "44": "2850 Hz",
+   "45": "2900 Hz",
+   "46": "2950 Hz",
+   "47": "3000 Hz",
+   "48": "3050 Hz",
+   "49": "3100 Hz",
+   "50": "3150 Hz",
+   "51": "3200 Hz",
+   "52": "3250 Hz",
+   "53": "3300 Hz",
+   "54": "3350 Hz",
+   "55": "3400 Hz",
+   "56": "3450 Hz",
+   "57": "3500 Hz",
+   "58": "3550 Hz",
+   "59": "3600 Hz",
+   "60": "3650 Hz",
+   "61": "3700 Hz",
+   "62": "3750 Hz",
+   "63": "3800 Hz",
+   "64": "3850 Hz",
+   "65": "3900 Hz",
+   "66": "3950 Hz",
+   "67": "4000 Hz"
+  },
+  "group": "AM"
+ },
+ {
+  "num": 44,
+  "name": "AM HCUT SLOPE",
+  "desc": "0: 6 dB/oct 1: 18 dB/oct",
+  "digits": 1,
+  "options": {
+   "0": "6 dB/oct",
+   "1": "18 dB/oct"
+  },
+  "group": "AM"
+ },
+ {
+  "num": 45,
+  "name": "AM MIC SELECT",
+  "desc": "0: MIC 1: REAR",
+  "digits": 1,
+  "options": {
+   "0": "MIC",
+   "1": "REAR"
+  },
+  "group": "AM"
+ },
+ {
+  "num": 46,
+  "name": "AM OUT LEVEL",
+  "desc": "0 ~ 100 (P2 = 000 ~ 100)",
+  "digits": 3,
+  "range": [
+   0,
+   100
+  ],
+  "group": "AM"
+ },
+ {
+  "num": 47,
+  "name": "AM PTT SELECT",
+  "desc": "0: DAKY 1: RTS 2: DTR",
+  "digits": 1,
+  "options": {
+   "0": "DAKY",
+   "1": "RTS",
+   "2": "DTR"
+  },
+  "group": "AM"
+ },
+ {
+  "num": 48,
+  "name": "AM PORT SELECT",
+  "desc": "0: DATA 1: USB",
+  "digits": 1,
+  "options": {
+   "0": "DATA",
+   "1": "USB"
+  },
+  "group": "AM"
+ },
+ {
+  "num": 49,
+  "name": "AM DATA GAIN",
+  "desc": "0 ~ 100 (P2 = 000 ~ 100)",
+  "digits": 3,
+  "range": [
+   0,
+   100
+  ],
+  "group": "AM"
+ },
+ {
+  "num": 50,
+  "name": "CW LCUT FREQ",
+  "desc": "00: OFF 01: 100 Hz ~ 19: 1000 Hz (50 Hz steps)",
+  "digits": 2,
+  "options": {
+   "00": "OFF",
+   "01": "100 Hz",
+   "02": "150 Hz",
+   "03": "200 Hz",
+   "04": "250 Hz",
+   "05": "300 Hz",
+   "06": "350 Hz",
+   "07": "400 Hz",
+   "08": "450 Hz",
+   "09": "500 Hz",
+   "10": "550 Hz",
+   "11": "600 Hz",
+   "12": "650 Hz",
+   "13": "700 Hz",
+   "14": "750 Hz",
+   "15": "800 Hz",
+   "16": "850 Hz",
+   "17": "900 Hz",
+   "18": "950 Hz",
+   "19": "1000 Hz"
+  },
+  "group": "CW"
+ },
+ {
+  "num": 51,
+  "name": "CW LCUT SLOPE",
+  "desc": "0: 6 dB/oct 1: 18 dB/oct",
+  "digits": 1,
+  "options": {
+   "0": "6 dB/oct",
+   "1": "18 dB/oct"
+  },
+  "group": "CW"
+ },
+ {
+  "num": 52,
+  "name": "CW HCUT FREQ",
+  "desc": "00: OFF 01: 700 Hz ~ 67: 4000 Hz (50 Hz steps)",
+  "digits": 2,
+  "options": {
+   "00": "OFF",
+   "01": "700 Hz",
+   "02": "750 Hz",
+   "03": "800 Hz",
+   "04": "850 Hz",
+   "05": "900 Hz",
+   "06": "950 Hz",
+   "07": "1000 Hz",
+   "08": "1050 Hz",
+   "09": "1100 Hz",
+   "10": "1150 Hz",
+   "11": "1200 Hz",
+   "12": "1250 Hz",
+   "13": "1300 Hz",
+   "14": "1350 Hz",
+   "15": "1400 Hz",
+   "16": "1450 Hz",
+   "17": "1500 Hz",
+   "18": "1550 Hz",
+   "19": "1600 Hz",
+   "20": "1650 Hz",
+   "21": "1700 Hz",
+   "22": "1750 Hz",
+   "23": "1800 Hz",
+   "24": "1850 Hz",
+   "25": "1900 Hz",
+   "26": "1950 Hz",
+   "27": "2000 Hz",
+   "28": "2050 Hz",
+   "29": "2100 Hz",
+   "30": "2150 Hz",
+   "31": "2200 Hz",
+   "32": "2250 Hz",
+   "33": "2300 Hz",
+   "34": "2350 Hz",
+   "35": "2400 Hz",
+   "36": "2450 Hz",
+   "37": "2500 Hz",
+   "38": "2550 Hz",
+   "39": "2600 Hz",
+   "40": "2650 Hz",
+   "41": "2700 Hz",
+   "42": "2750 Hz",
+   "43": "2800 Hz",
+   "44": "2850 Hz",
+   "45": "2900 Hz",
+   "46": "2950 Hz",
+   "47": "3000 Hz",
+   "48": "3050 Hz",
+   "49": "3100 Hz",
+   "50": "3150 Hz",
+   "51": "3200 Hz",
+   "52": "3250 Hz",
+   "53": "3300 Hz",
+   "54": "3350 Hz",
+   "55": "3400 Hz",
+   "56": "3450 Hz",
+   "57": "3500 Hz",
+   "58": "3550 Hz",
+   "59": "3600 Hz",
+   "60": "3650 Hz",
+   "61": "3700 Hz",
+   "62": "3750 Hz",
+   "63": "3800 Hz",
+   "64": "3850 Hz",
+   "65": "3900 Hz",
+   "66": "3950 Hz",
+   "67": "4000 Hz"
+  },
+  "group": "CW"
+ },
+ {
+  "num": 53,
+  "name": "CW HCUT SLOPE",
+  "desc": "0: 6 dB/oct 1: 18 dB/oct",
+  "digits": 1,
+  "options": {
+   "0": "6 dB/oct",
+   "1": "18 dB/oct"
+  },
+  "group": "CW"
+ },
+ {
+  "num": 54,
+  "name": "CW OUT LEVEL",
+  "desc": "0 ~ 100 (P2 = 000 ~ 100)",
+  "digits": 3,
+  "range": [
+   0,
+   100
+  ],
+  "group": "CW"
+ },
+ {
+  "num": 55,
+  "name": "CW AUTO MODE",
+  "desc": "0: OFF 1: 50 MHz 2: ON",
+  "digits": 1,
+  "options": {
+   "0": "OFF",
+   "1": "50 MHz",
+   "2": "ON"
+  },
+  "group": "CW"
+ },
+ {
+  "num": 56,
+  "name": "CW BK-IN TYPE",
+  "desc": "0: SEMI BREAK-IN 1: FULL BREAK-IN",
+  "digits": 1,
+  "options": {
+   "0": "SEMI BREAK-IN",
+   "1": "FULL BREAK-IN"
+  },
+  "group": "CW"
+ },
+ {
+  "num": 57,
+  "name": "CW BK-IN DELAY",
+  "desc": "30 ~ 3000 msec (P2 = 0030 ~ 3000, 10 msec/step)",
+  "digits": 4,
+  "range": [
+   30,
+   3000
+  ],
+  "group": "CW",
+  "step": 10
+ },
+ {
+  "num": 58,
+  "name": "CW WAVE SHAPE",
+  "desc": "0: 1 msec 1: 2 msec 2: 4 msec 3: 6 msec",
+  "digits": 1,
+  "options": {
+   "0": "1 msec",
+   "1": "2 msec",
+   "2": "4 msec",
+   "3": "6 msec"
+  },
+  "group": "CW"
+ },
+ {
+  "num": 59,
+  "name": "CW FREQ DISPLAY",
+  "desc": "0: DIRECT FREQ 1: PITCH OFFSET",
+  "digits": 1,
+  "options": {
+   "0": "DIRECT FREQ",
+   "1": "PITCH OFFSET"
+  },
+  "group": "CW"
+ },
+ {
+  "num": 60,
+  "name": "PC KEYING",
+  "desc": "0: OFF 1: DAKY 2: RTS 3: DTR",
+  "digits": 1,
+  "options": {
+   "0": "OFF",
+   "1": "DAKY",
+   "2": "RTS",
+   "3": "DTR"
+  },
+  "group": "CW"
+ },
+ {
+  "num": 61,
+  "name": "QSK DELAY TIME",
+  "desc": "0: 15 msec 1: 20 msec 2: 25 msec 3: 30 msec",
+  "digits": 1,
+  "options": {
+   "0": "15 msec",
+   "1": "20 msec",
+   "2": "25 msec",
+   "3": "30 msec"
+  },
+  "group": "CW"
+ },
+ {
+  "num": 62,
+  "name": "DATA MODE",
+  "desc": "0: PSK 1: OTHER",
+  "digits": 1,
+  "options": {
+   "0": "PSK",
+   "1": "OTHER"
+  },
+  "group": "Data"
+ },
+ {
+  "num": 63,
+  "name": "PSK TONE",
+  "desc": "0: 1000 Hz 1: 1500 Hz 2: 2000 Hz",
+  "digits": 1,
+  "options": {
+   "0": "1000 Hz",
+   "1": "1500 Hz",
+   "2": "2000 Hz"
+  },
+  "group": "Data"
+ },
+ {
+  "num": 64,
+  "name": "OTHER DISP (SSB)",
+  "desc": "-3000 Hz ~ 0 ~ +3000 Hz (P2 = -3000 ~ -0000 or +0000 ~ +3000, 10 Hz steps)",
+  "digits": 5,
+  "group": "Data"
+ },
+ {
+  "num": 65,
+  "name": "OTHER SHIFT (SSB)",
+  "desc": "-3000 Hz ~ 0 ~ +3000 Hz (P2 = -3000 ~ -0000 or +0000 ~ +3000, 10 Hz steps)",
+  "digits": 5,
+  "group": "Data"
+ },
+ {
+  "num": 66,
+  "name": "DATA LCUT FREQ",
+  "desc": "00: OFF 01: 100 Hz ~ 19: 1000 Hz (50 Hz steps)",
+  "digits": 2,
+  "options": {
+   "00": "OFF",
+   "01": "100 Hz",
+   "02": "150 Hz",
+   "03": "200 Hz",
+   "04": "250 Hz",
+   "05": "300 Hz",
+   "06": "350 Hz",
+   "07": "400 Hz",
+   "08": "450 Hz",
+   "09": "500 Hz",
+   "10": "550 Hz",
+   "11": "600 Hz",
+   "12": "650 Hz",
+   "13": "700 Hz",
+   "14": "750 Hz",
+   "15": "800 Hz",
+   "16": "850 Hz",
+   "17": "900 Hz",
+   "18": "950 Hz",
+   "19": "1000 Hz"
+  },
+  "group": "Data"
+ },
+ {
+  "num": 67,
+  "name": "DATA LCUT SLOPE",
+  "desc": "0: 6 dB/oct 1: 18 dB/oct",
+  "digits": 1,
+  "options": {
+   "0": "6 dB/oct",
+   "1": "18 dB/oct"
+  },
+  "group": "Data"
+ },
+ {
+  "num": 68,
+  "name": "DATA HCUT FREQ",
+  "desc": "00: OFF 01: 700 Hz ~ 67: 4000 Hz (50 Hz steps)",
+  "digits": 2,
+  "options": {
+   "00": "OFF",
+   "01": "700 Hz",
+   "02": "750 Hz",
+   "03": "800 Hz",
+   "04": "850 Hz",
+   "05": "900 Hz",
+   "06": "950 Hz",
+   "07": "1000 Hz",
+   "08": "1050 Hz",
+   "09": "1100 Hz",
+   "10": "1150 Hz",
+   "11": "1200 Hz",
+   "12": "1250 Hz",
+   "13": "1300 Hz",
+   "14": "1350 Hz",
+   "15": "1400 Hz",
+   "16": "1450 Hz",
+   "17": "1500 Hz",
+   "18": "1550 Hz",
+   "19": "1600 Hz",
+   "20": "1650 Hz",
+   "21": "1700 Hz",
+   "22": "1750 Hz",
+   "23": "1800 Hz",
+   "24": "1850 Hz",
+   "25": "1900 Hz",
+   "26": "1950 Hz",
+   "27": "2000 Hz",
+   "28": "2050 Hz",
+   "29": "2100 Hz",
+   "30": "2150 Hz",
+   "31": "2200 Hz",
+   "32": "2250 Hz",
+   "33": "2300 Hz",
+   "34": "2350 Hz",
+   "35": "2400 Hz",
+   "36": "2450 Hz",
+   "37": "2500 Hz",
+   "38": "2550 Hz",
+   "39": "2600 Hz",
+   "40": "2650 Hz",
+   "41": "2700 Hz",
+   "42": "2750 Hz",
+   "43": "2800 Hz",
+   "44": "2850 Hz",
+   "45": "2900 Hz",
+   "46": "2950 Hz",
+   "47": "3000 Hz",
+   "48": "3050 Hz",
+   "49": "3100 Hz",
+   "50": "3150 Hz",
+   "51": "3200 Hz",
+   "52": "3250 Hz",
+   "53": "3300 Hz",
+   "54": "3350 Hz",
+   "55": "3400 Hz",
+   "56": "3450 Hz",
+   "57": "3500 Hz",
+   "58": "3550 Hz",
+   "59": "3600 Hz",
+   "60": "3650 Hz",
+   "61": "3700 Hz",
+   "62": "3750 Hz",
+   "63": "3800 Hz",
+   "64": "3850 Hz",
+   "65": "3900 Hz",
+   "66": "3950 Hz",
+   "67": "4000 Hz"
+  },
+  "group": "Data"
+ },
+ {
+  "num": 69,
+  "name": "DATA HCUT SLOPE",
+  "desc": "0: 6 dB/oct 1: 18 dB/oct",
+  "digits": 1,
+  "options": {
+   "00": "6 dB/oct",
+   "01": "18 dB/oct"
+  },
+  "group": "Data"
+ },
+ {
+  "num": 70,
+  "name": "DATA IN SELECT",
+  "desc": "0: MIC 1: REAR",
+  "digits": 1,
+  "options": {
+   "0": "MIC",
+   "1": "REAR"
+  },
+  "group": "Data"
+ },
+ {
+  "num": 71,
+  "name": "DATA PTT SELECT",
+  "desc": "0: DAKY 1: RTS 2: DTR",
+  "digits": 1,
+  "options": {
+   "0": "DAKY",
+   "1": "RTS",
+   "2": "DTR"
+  },
+  "group": "Data"
+ },
+ {
+  "num": 72,
+  "name": "DATA PORT SELECT",
+  "desc": "1: DATA 2: USB",
+  "digits": 1,
+  "options": {
+   "0": "DATA",
+   "1": "USB"
+  },
+  "group": "Data"
+ },
+ {
+  "num": 73,
+  "name": "DATA OUT LEVEL",
+  "desc": "0 ~ 100 (P2 = 000 ~ 100)",
+  "digits": 3,
+  "range": [
+   0,
+   100
+  ],
+  "group": "Data"
+ },
+ {
+  "num": 74,
+  "name": "FM MIC SELECT",
+  "desc": "0: MIC 1: REAR",
+  "digits": 1,
+  "options": {
+   "0": "MIC",
+   "1": "REAR"
+  },
+  "warn": "Must be REAR for VARA FM audio.",
+  "group": "FM & packet"
+ },
+ {
+  "num": 75,
+  "name": "FM OUT LEVEL",
+  "desc": "0 ~ 100 (P2 = 000 ~ 100)",
+  "digits": 3,
+  "range": [
+   0,
+   100
+  ],
+  "group": "FM & packet"
+ },
+ {
+  "num": 76,
+  "name": "FM PKT PTT SELECT",
+  "desc": "0: DAKY 1: RTS 2: DTR",
+  "digits": 1,
+  "options": {
+   "0": "DAKY",
+   "1": "RTS",
+   "2": "DTR"
+  },
+  "warn": "VARA FM keys the radio with this (must be RTS).",
+  "group": "FM & packet"
+ },
+ {
+  "num": 77,
+  "name": "FM PKT PORT SELECT",
+  "desc": "1: DATA 2: USB",
+  "digits": 1,
+  "options": {
+   "0": "DATA",
+   "1": "USB"
+  },
+  "warn": "Must be USB for VARA FM audio.",
+  "group": "FM & packet"
+ },
+ {
+  "num": 78,
+  "name": "FM PKT TX GAIN",
+  "desc": "0 ~ 100 (P2 = 000 ~ 100)",
+  "digits": 3,
+  "range": [
+   0,
+   100
+  ],
+  "group": "FM & packet"
+ },
+ {
+  "num": 79,
+  "name": "FM PKT MODE",
+  "desc": "0: 1200 1: 9600",
+  "digits": 1,
+  "options": {
+   "0": "1200",
+   "1": "9600"
+  },
+  "warn": "Must be 1200 for VARA FM.",
+  "group": "FM & packet"
+ },
+ {
+  "num": 80,
+  "name": "RPT SHIFT 28MHz",
+  "desc": "0 ~ 1000 kHz (P2 = 0000 ~ 1000, 10 kHz/step)",
+  "digits": 4,
+  "range": [
+   0,
+   1000
+  ],
+  "group": "Repeater & C4FM",
+  "step": 10
+ },
+ {
+  "num": 81,
+  "name": "RPT SHIFT 50MHz",
+  "desc": "0 ~ 4000 kHz (P2 = 0000 ~ 4000, 10 kHz/step)",
+  "digits": 4,
+  "range": [
+   0,
+   4000
+  ],
+  "group": "Repeater & C4FM",
+  "step": 10
+ },
+ {
+  "num": 82,
+  "name": "RPT SHIFT 144MHz",
+  "desc": "0 ~ 4000 kHz (P2 = 0000 ~ 4000, 10 kHz/step)",
+  "digits": 4,
+  "range": [
+   0,
+   4000
+  ],
+  "group": "Repeater & C4FM",
+  "step": 10
+ },
+ {
+  "num": 83,
+  "name": "RPT SHIFT 430MHz",
+  "desc": "0 ~ 10000 kHz (P2 = 0000 ~ 10000, 10 kHz/step)",
+  "digits": 5,
+  "range": [
+   0,
+   10000
+  ],
+  "group": "Repeater & C4FM",
+  "step": 10
+ },
+ {
+  "num": 84,
+  "name": "ARS 144MHz",
+  "desc": "0: OFF 1: ON",
+  "digits": 1,
+  "options": {
+   "0": "OFF",
+   "1": "ON"
+  },
+  "group": "Repeater & C4FM"
+ },
+ {
+  "num": 85,
+  "name": "ARS 430MHz",
+  "desc": "0: OFF 1: ON",
+  "digits": 1,
+  "options": {
+   "0": "OFF",
+   "1": "ON"
+  },
+  "group": "Repeater & C4FM"
+ },
+ {
+  "num": 86,
+  "name": "DCS POLARITY",
+  "desc": "0: Tn-Rn 1: Tn-Riv 2: Tiv-Rn 3: Tiv-Riv",
+  "digits": 1,
+  "options": {
+   "0": "Tn-Rn",
+   "1": "Tn-Riv",
+   "2": "Tiv-Rn",
+   "3": "Tiv-Riv"
+  },
+  "group": "Repeater & C4FM"
+ },
+ {
+  "num": 87,
+  "name": "RADIO ID",
+  "desc": "----------",
+  "digits": null,
+  "readonly": true,
+  "group": "Repeater & C4FM"
+ },
+ {
+  "num": 88,
+  "name": "GM DISPLY",
+  "desc": "0: DISTANCE 1: STRENGTH",
+  "digits": 1,
+  "options": {
+   "0": "DISTANCE",
+   "1": "STRENGTH"
+  },
+  "group": "Repeater & C4FM"
+ },
+ {
+  "num": 89,
+  "name": "DISTANCE",
+  "desc": "0: km 1: mile",
+  "digits": 1,
+  "options": {
+   "0": "km",
+   "1": "mile"
+  },
+  "group": "Repeater & C4FM"
+ },
+ {
+  "num": 90,
+  "name": "AMS TX MODE",
+  "desc": "0: AUTO 1: MANUAL 2: DN 3: VW 4: ANALOG",
+  "digits": 1,
+  "options": {
+   "0": "AUTO",
+   "1": "MANUAL",
+   "2": "DN",
+   "3": "VW",
+   "4": "ANALOG"
+  },
+  "group": "Repeater & C4FM"
+ },
+ {
+  "num": 91,
+  "name": "STANDBY BEEP",
+  "desc": "0: OFF 1: ON",
+  "digits": 1,
+  "options": {
+   "0": "OFF",
+   "1": "ON"
+  },
+  "group": "Repeater & C4FM"
+ },
+ {
+  "num": 92,
+  "name": "RTTY LCUT FREQ",
+  "desc": "00: OFF 01: 100 Hz ~ 19: 1000Hz (50 Hz steps)",
+  "digits": 2,
+  "options": {
+   "00": "OFF",
+   "01": "100 Hz",
+   "02": "150 Hz",
+   "03": "200 Hz",
+   "04": "250 Hz",
+   "05": "300 Hz",
+   "06": "350 Hz",
+   "07": "400 Hz",
+   "08": "450 Hz",
+   "09": "500 Hz",
+   "10": "550 Hz",
+   "11": "600 Hz",
+   "12": "650 Hz",
+   "13": "700 Hz",
+   "14": "750 Hz",
+   "15": "800 Hz",
+   "16": "850 Hz",
+   "17": "900 Hz",
+   "18": "950 Hz",
+   "19": "1000 Hz"
+  },
+  "group": "RTTY"
+ },
+ {
+  "num": 93,
+  "name": "RTTY LCUT SLOPE",
+  "desc": "0: 6 dB/oct 1: 18 dB/oct",
+  "digits": 1,
+  "options": {
+   "0": "6 dB/oct",
+   "1": "18 dB/oct"
+  },
+  "group": "RTTY"
+ },
+ {
+  "num": 94,
+  "name": "RTTY HCUT FREQ",
+  "desc": "00: OFF 01: 700 Hz ~ 67: 4000Hz (50 Hz steps)",
+  "digits": 2,
+  "options": {
+   "00": "OFF",
+   "01": "700 Hz",
+   "02": "750 Hz",
+   "03": "800 Hz",
+   "04": "850 Hz",
+   "05": "900 Hz",
+   "06": "950 Hz",
+   "07": "1000 Hz",
+   "08": "1050 Hz",
+   "09": "1100 Hz",
+   "10": "1150 Hz",
+   "11": "1200 Hz",
+   "12": "1250 Hz",
+   "13": "1300 Hz",
+   "14": "1350 Hz",
+   "15": "1400 Hz",
+   "16": "1450 Hz",
+   "17": "1500 Hz",
+   "18": "1550 Hz",
+   "19": "1600 Hz",
+   "20": "1650 Hz",
+   "21": "1700 Hz",
+   "22": "1750 Hz",
+   "23": "1800 Hz",
+   "24": "1850 Hz",
+   "25": "1900 Hz",
+   "26": "1950 Hz",
+   "27": "2000 Hz",
+   "28": "2050 Hz",
+   "29": "2100 Hz",
+   "30": "2150 Hz",
+   "31": "2200 Hz",
+   "32": "2250 Hz",
+   "33": "2300 Hz",
+   "34": "2350 Hz",
+   "35": "2400 Hz",
+   "36": "2450 Hz",
+   "37": "2500 Hz",
+   "38": "2550 Hz",
+   "39": "2600 Hz",
+   "40": "2650 Hz",
+   "41": "2700 Hz",
+   "42": "2750 Hz",
+   "43": "2800 Hz",
+   "44": "2850 Hz",
+   "45": "2900 Hz",
+   "46": "2950 Hz",
+   "47": "3000 Hz",
+   "48": "3050 Hz",
+   "49": "3100 Hz",
+   "50": "3150 Hz",
+   "51": "3200 Hz",
+   "52": "3250 Hz",
+   "53": "3300 Hz",
+   "54": "3350 Hz",
+   "55": "3400 Hz",
+   "56": "3450 Hz",
+   "57": "3500 Hz",
+   "58": "3550 Hz",
+   "59": "3600 Hz",
+   "60": "3650 Hz",
+   "61": "3700 Hz",
+   "62": "3750 Hz",
+   "63": "3800 Hz",
+   "64": "3850 Hz",
+   "65": "3900 Hz",
+   "66": "3950 Hz",
+   "67": "4000 Hz"
+  },
+  "group": "RTTY"
+ },
+ {
+  "num": 95,
+  "name": "RTTY HCUT SLOPE",
+  "desc": "0: 6 dB/oct 1: 18 dB/oct",
+  "digits": 1,
+  "options": {
+   "0": "6 dB/oct",
+   "1": "18 dB/oct"
+  },
+  "group": "RTTY"
+ },
+ {
+  "num": 96,
+  "name": "RTTY SHIFT PORT",
+  "desc": "0: SHIFT 1: DTR 2: RTS",
+  "digits": 1,
+  "options": {
+   "0": "SHIFT",
+   "1": "DTR",
+   "2": "RTS"
+  },
+  "group": "RTTY"
+ },
+ {
+  "num": 97,
+  "name": "RTTY POLARITY-RX",
+  "desc": "0: NORMAL 1: REVERSE",
+  "digits": 1,
+  "options": {
+   "0": "NORMAL",
+   "1": "REVERSE"
+  },
+  "group": "RTTY"
+ },
+ {
+  "num": 98,
+  "name": "RTTY POLARITY-TX",
+  "desc": "0: NORMAL 1: REVERSE",
+  "digits": 1,
+  "options": {
+   "0": "NORMAL",
+   "1": "REVERSE"
+  },
+  "group": "RTTY"
+ },
+ {
+  "num": 99,
+  "name": "RTTY OUT LEVEL",
+  "desc": "0 ~ 100 (P2 = 000 ~ 100)",
+  "digits": 3,
+  "range": [
+   0,
+   100
+  ],
+  "group": "RTTY"
+ },
+ {
+  "num": 100,
+  "name": "RTTY SHIFT FREQ",
+  "desc": "1: 170 Hz 1: 200 Hz 2: 425 Hz 3: 850 Hz",
+  "digits": 1,
+  "options": {
+   "0": "170 Hz",
+   "1": "200 Hz",
+   "2": "425 Hz",
+   "3": "850 Hz"
+  },
+  "group": "RTTY"
+ },
+ {
+  "num": 101,
+  "name": "RTTY MARK FREQ",
+  "desc": "1: 1275 Hz 2: 2125 Hz",
+  "digits": 1,
+  "options": {
+   "0": "1275 Hz",
+   "1": "2125 Hz"
+  },
+  "group": "RTTY"
+ },
+ {
+  "num": 102,
+  "name": "SSB LCUT FREQ",
+  "desc": "00: OFF 01: 100 Hz ~ 19: 1000 Hz (50 Hz steps)",
+  "digits": 2,
+  "options": {
+   "00": "OFF",
+   "01": "100 Hz",
+   "02": "150 Hz",
+   "03": "200 Hz",
+   "04": "250 Hz",
+   "05": "300 Hz",
+   "06": "350 Hz",
+   "07": "400 Hz",
+   "08": "450 Hz",
+   "09": "500 Hz",
+   "10": "550 Hz",
+   "11": "600 Hz",
+   "12": "650 Hz",
+   "13": "700 Hz",
+   "14": "750 Hz",
+   "15": "800 Hz",
+   "16": "850 Hz",
+   "17": "900 Hz",
+   "18": "950 Hz",
+   "19": "1000 Hz"
+  },
+  "group": "SSB"
+ },
+ {
+  "num": 103,
+  "name": "SSB LCUT SLOPE",
+  "desc": "0: 6 dB/oct 1: 18 dB/oct",
+  "digits": 1,
+  "options": {
+   "0": "6 dB/oct",
+   "1": "18 dB/oct"
+  },
+  "group": "SSB"
+ },
+ {
+  "num": 104,
+  "name": "SSB HCUT FREQ",
+  "desc": "00: OFF 01: 700 Hz ~ 67: 4000 Hz (50 Hz steps)",
+  "digits": 2,
+  "options": {
+   "00": "OFF",
+   "01": "700 Hz",
+   "02": "750 Hz",
+   "03": "800 Hz",
+   "04": "850 Hz",
+   "05": "900 Hz",
+   "06": "950 Hz",
+   "07": "1000 Hz",
+   "08": "1050 Hz",
+   "09": "1100 Hz",
+   "10": "1150 Hz",
+   "11": "1200 Hz",
+   "12": "1250 Hz",
+   "13": "1300 Hz",
+   "14": "1350 Hz",
+   "15": "1400 Hz",
+   "16": "1450 Hz",
+   "17": "1500 Hz",
+   "18": "1550 Hz",
+   "19": "1600 Hz",
+   "20": "1650 Hz",
+   "21": "1700 Hz",
+   "22": "1750 Hz",
+   "23": "1800 Hz",
+   "24": "1850 Hz",
+   "25": "1900 Hz",
+   "26": "1950 Hz",
+   "27": "2000 Hz",
+   "28": "2050 Hz",
+   "29": "2100 Hz",
+   "30": "2150 Hz",
+   "31": "2200 Hz",
+   "32": "2250 Hz",
+   "33": "2300 Hz",
+   "34": "2350 Hz",
+   "35": "2400 Hz",
+   "36": "2450 Hz",
+   "37": "2500 Hz",
+   "38": "2550 Hz",
+   "39": "2600 Hz",
+   "40": "2650 Hz",
+   "41": "2700 Hz",
+   "42": "2750 Hz",
+   "43": "2800 Hz",
+   "44": "2850 Hz",
+   "45": "2900 Hz",
+   "46": "2950 Hz",
+   "47": "3000 Hz",
+   "48": "3050 Hz",
+   "49": "3100 Hz",
+   "50": "3150 Hz",
+   "51": "3200 Hz",
+   "52": "3250 Hz",
+   "53": "3300 Hz",
+   "54": "3350 Hz",
+   "55": "3400 Hz",
+   "56": "3450 Hz",
+   "57": "3500 Hz",
+   "58": "3550 Hz",
+   "59": "3600 Hz",
+   "60": "3650 Hz",
+   "61": "3700 Hz",
+   "62": "3750 Hz",
+   "63": "3800 Hz",
+   "64": "3850 Hz",
+   "65": "3900 Hz",
+   "66": "3950 Hz",
+   "67": "4000 Hz"
+  },
+  "group": "SSB"
+ },
+ {
+  "num": 105,
+  "name": "SSB HCUT SLOPE",
+  "desc": "0: 6 dB/oct 1: 18 dB/oct",
+  "digits": 1,
+  "options": {
+   "0": "6 dB/oct",
+   "1": "18 dB/oct"
+  },
+  "group": "SSB"
+ },
+ {
+  "num": 106,
+  "name": "SSB MIC SELECT",
+  "desc": "0: MIC 1: REAR",
+  "digits": 1,
+  "options": {
+   "0": "MIC",
+   "1": "REAR"
+  },
+  "group": "SSB"
+ },
+ {
+  "num": 107,
+  "name": "SSB OUT LEVEL",
+  "desc": "0 ~ 100 (P2 = 000 ~ 100)",
+  "digits": 3,
+  "range": [
+   0,
+   100
+  ],
+  "group": "SSB"
+ },
+ {
+  "num": 108,
+  "name": "SSB PTT SELECT",
+  "desc": "0: DAKY 1: RTS 2: DTR",
+  "digits": 1,
+  "options": {
+   "0": "DAKY",
+   "1": "RTS",
+   "2": "DTR"
+  },
+  "group": "SSB"
+ },
+ {
+  "num": 109,
+  "name": "SSB PORT SELECT",
+  "desc": "0: DATA 1: USB",
+  "digits": 1,
+  "options": {
+   "0": "DATA",
+   "1": "USB"
+  },
+  "group": "SSB"
+ },
+ {
+  "num": 110,
+  "name": "SSB TX BPF",
+  "desc": "0: 50 ~ 3000 1: 100 ~ 2900 2: 200 ~ 2800 3: 300 ~ 2700 4: 400 ~ 2600",
+  "digits": 1,
+  "options": {
+   "0": "50-3000 Hz",
+   "1": "100-2900 Hz",
+   "2": "200-2800 Hz",
+   "3": "300-2700 Hz",
+   "4": "400-2600 Hz"
+  },
+  "group": "SSB"
+ },
+ {
+  "num": 111,
+  "name": "APF WIDTH",
+  "desc": "0: NARROW 1: MEDIUM 2: WIDE",
+  "digits": 1,
+  "options": {
+   "0": "NARROW",
+   "1": "MEDIUM",
+   "2": "WIDE"
+  },
+  "group": "DSP & scope"
+ },
+ {
+  "num": 112,
+  "name": "CONTOUR LEVEL",
+  "desc": "-40 ~ 0 ~ +20 (P2 = -40 ~ -00 or +00 ~ +20)",
+  "digits": 3,
+  "group": "DSP & scope"
+ },
+ {
+  "num": 113,
+  "name": "CONTOUR WIDTH",
+  "desc": "01 ~ 11",
+  "digits": 2,
+  "range": [
+   1,
+   11
+  ],
+  "group": "DSP & scope"
+ },
+ {
+  "num": 114,
+  "name": "IF NOTCH WIDTH",
+  "desc": "0: NARROW 1: WIDE",
+  "digits": 1,
+  "options": {
+   "0": "NARROW",
+   "1": "WIDE"
+  },
+  "group": "DSP & scope"
+ },
+ {
+  "num": 115,
+  "name": "SCP DISPLAY MODE",
+  "desc": "0: SPECTRUM 1: WATER FALL",
+  "digits": 1,
+  "options": {
+   "0": "SPECTRUM",
+   "1": "WATER FALL"
+  },
+  "group": "DSP & scope"
+ },
+ {
+  "num": 116,
+  "name": "SCP SPAN FREQ",
+  "desc": "03: 50 kHz 04: 100 kHz 05: 200 kHz 06: 500 kHz 07: 1000 kHz",
+  "digits": 2,
+  "options": {
+   "03": "50 kHz",
+   "04": "100 kHz",
+   "05": "200 kHz",
+   "06": "500 kHz",
+   "07": "1000 kHz"
+  },
+  "group": "DSP & scope"
+ },
+ {
+  "num": 117,
+  "name": "SPECTRUM COLOR",
+  "desc": "0: BLUE 1: GRAY 2: GREEN 3: ORANGE 4: PURPLE 5: RED 6: SKY BLUE",
+  "digits": 1,
+  "options": {
+   "0": "BLUE",
+   "1": "GRAY",
+   "2": "GREEN",
+   "3": "ORANGE",
+   "4": "PURPLE",
+   "5": "RED",
+   "6": "SKY BLUE"
+  },
+  "group": "DSP & scope"
+ },
+ {
+  "num": 118,
+  "name": "WATER FALL COLOR",
+  "desc": "0: BLUE 1: GRAY 2: GREEN 3: ORANGE 4: PURPLE 5: RED 6: SKY BLUE 7: MULTI",
+  "digits": 1,
+  "options": {
+   "0": "BLUE",
+   "1": "GRAY",
+   "2": "GREEN",
+   "3": "ORANGE",
+   "4": "PURPLE",
+   "5": "RED",
+   "6": "SKY BLUE",
+   "7": "MULTI"
+  },
+  "group": "DSP & scope"
+ },
+ {
+  "num": 119,
+  "name": "PRMTRC EQ1 FREQ",
+  "desc": "00 : OFF 01: 100 02: 200 03: 300 04: 400 05: 500 06: 600 07: 700 Hz",
+  "digits": 2,
+  "options": {
+   "00": "OFF",
+   "01": "100",
+   "02": "200",
+   "03": "300",
+   "04": "400",
+   "05": "500",
+   "06": "600",
+   "07": "700 Hz"
+  },
+  "group": "TX equalizer"
+ },
+ {
+  "num": 120,
+  "name": "PRMTRC EQ1 LEVEL",
+  "desc": "-20 ~ 0 ~ +10 (P2 = -20 ~ -00 or +00 ~ +10)",
+  "digits": 3,
+  "group": "TX equalizer"
+ },
+ {
+  "num": 121,
+  "name": "PRMTRC EQ1 BWTH",
+  "desc": "01 ~ 10",
+  "digits": 2,
+  "range": [
+   1,
+   10
+  ],
+  "group": "TX equalizer"
+ },
+ {
+  "num": 122,
+  "name": "PRMTRC EQ2 FREQ",
+  "desc": "00: OFF 01: 700 02: 800 03: 900 04: 1000 05: 1100 06: 1200 07: 1300 08: 1400 09: 1500 Hz",
+  "digits": 2,
+  "options": {
+   "00": "OFF",
+   "01": "700",
+   "02": "800",
+   "03": "900",
+   "04": "1000",
+   "05": "1100",
+   "06": "1200",
+   "07": "1300",
+   "08": "1400",
+   "09": "1500 Hz"
+  },
+  "group": "TX equalizer"
+ },
+ {
+  "num": 123,
+  "name": "PRMTRC EQ2 LEVEL",
+  "desc": "-20 ~ 0 ~ +10 (P2 = -20 ~ -00 or +00 ~ +10)",
+  "digits": 3,
+  "group": "TX equalizer"
+ },
+ {
+  "num": 124,
+  "name": "PRMTRC EQ2 BWTH",
+  "desc": "01 ~ 10",
+  "digits": 2,
+  "range": [
+   1,
+   10
+  ],
+  "group": "TX equalizer"
+ },
+ {
+  "num": 125,
+  "name": "PRMTRC EQ3 FREQ",
+  "desc": "00 : OFF 01: 1500 02: 1600 03: 1700 04: 1800 05: 1900 06: 2000 ~ 18: 3200 Hz",
+  "digits": 2,
+  "options": {
+   "00": "OFF",
+   "01": "1500 Hz",
+   "02": "1600 Hz",
+   "03": "1700 Hz",
+   "04": "1800 Hz",
+   "05": "1900 Hz",
+   "06": "2000 Hz",
+   "07": "2100 Hz",
+   "08": "2200 Hz",
+   "09": "2300 Hz",
+   "10": "2400 Hz",
+   "11": "2500 Hz",
+   "12": "2600 Hz",
+   "13": "2700 Hz",
+   "14": "2800 Hz",
+   "15": "2900 Hz",
+   "16": "3000 Hz",
+   "17": "3100 Hz",
+   "18": "3200 Hz"
+  },
+  "group": "TX equalizer"
+ },
+ {
+  "num": 126,
+  "name": "PRMTRC EQ3 LEVEL",
+  "desc": "-20 ~ 0 ~ +10 (P2 = -20 ~ -00 or +00 ~ +10)",
+  "digits": 3,
+  "group": "TX equalizer"
+ },
+ {
+  "num": 127,
+  "name": "PRMTRC EQ3 BWTH",
+  "desc": "01 ~ 10",
+  "digits": 2,
+  "range": [
+   1,
+   10
+  ],
+  "group": "TX equalizer"
+ },
+ {
+  "num": 128,
+  "name": "P-PRMTRC EQ1 FREQ",
+  "desc": "00 : OFF 01: 100 02: 200 03: 300 04: 400 05: 500 06: 600 07: 700 Hz",
+  "digits": 2,
+  "options": {
+   "00": "OFF",
+   "01": "100",
+   "02": "200",
+   "03": "300",
+   "04": "400",
+   "05": "500",
+   "06": "600",
+   "07": "700 Hz"
+  },
+  "group": "TX equalizer"
+ },
+ {
+  "num": 129,
+  "name": "P-PRMTRC EQ1 LEVEL",
+  "desc": "-20 ~ 0 ~ +10 (P2 = -20 ~ -00 or +00 ~ +10)",
+  "digits": 3,
+  "group": "TX equalizer"
+ },
+ {
+  "num": 130,
+  "name": "P-PRMTRC EQ1 BWTH",
+  "desc": "01 ~ 10",
+  "digits": 2,
+  "range": [
+   1,
+   10
+  ],
+  "group": "TX equalizer"
+ },
+ {
+  "num": 131,
+  "name": "P-PRMTRC EQ2 FREQ",
+  "desc": "00: OFF 01: 700 02: 800 03: 900 04: 1000 05: 1100 06: 1200 07: 1300 08: 1400 09: 1500 Hz",
+  "digits": 2,
+  "options": {
+   "00": "OFF",
+   "01": "700",
+   "02": "800",
+   "03": "900",
+   "04": "1000",
+   "05": "1100",
+   "06": "1200",
+   "07": "1300",
+   "08": "1400",
+   "09": "1500 Hz"
+  },
+  "group": "TX equalizer"
+ },
+ {
+  "num": 132,
+  "name": "P-PRMTRC EQ2 LEVEL",
+  "desc": "-20 ~ 0 ~ +10 (P2 = -20 ~ -00 or +00 ~ +10)",
+  "digits": 3,
+  "group": "TX equalizer"
+ },
+ {
+  "num": 133,
+  "name": "P-PRMTRC EQ2 BWTH",
+  "desc": "01 ~ 10",
+  "digits": 2,
+  "range": [
+   1,
+   10
+  ],
+  "group": "TX equalizer"
+ },
+ {
+  "num": 134,
+  "name": "P-PRMTRC EQ3 FREQ",
+  "desc": "00 : OFF 01: 1500 02: 1600 03: 1700 04: 1800 05: 1900 06: 2000 ~ 18: 3200 Hz",
+  "digits": 2,
+  "options": {
+   "00": "OFF",
+   "01": "1500 Hz",
+   "02": "1600 Hz",
+   "03": "1700 Hz",
+   "04": "1800 Hz",
+   "05": "1900 Hz",
+   "06": "2000 Hz",
+   "07": "2100 Hz",
+   "08": "2200 Hz",
+   "09": "2300 Hz",
+   "10": "2400 Hz",
+   "11": "2500 Hz",
+   "12": "2600 Hz",
+   "13": "2700 Hz",
+   "14": "2800 Hz",
+   "15": "2900 Hz",
+   "16": "3000 Hz",
+   "17": "3100 Hz",
+   "18": "3200 Hz"
+  },
+  "group": "TX equalizer"
+ },
+ {
+  "num": 135,
+  "name": "P-PRMTRC EQ3 LEVEL",
+  "desc": "-20 ~ 0 ~ +10 (P2 = -20 ~ -00 or +00 ~ +10)",
+  "digits": 3,
+  "group": "TX equalizer"
+ },
+ {
+  "num": 136,
+  "name": "P-PRMTRC EQ3 BWTH",
+  "desc": "01 ~ 10",
+  "digits": 2,
+  "range": [
+   1,
+   10
+  ],
+  "group": "TX equalizer"
+ },
+ {
+  "num": 137,
+  "name": "HF TX MAX POWER",
+  "desc": "5 ~ 100 (P2 = 005 ~ 100)",
+  "digits": 3,
+  "range": [
+   5,
+   100
+  ],
+  "group": "TX max power"
+ },
+ {
+  "num": 138,
+  "name": "50M TX MAX POWER",
+  "desc": "5 ~ 100 (P2 = 005 ~ 100)",
+  "digits": 3,
+  "range": [
+   5,
+   100
+  ],
+  "group": "TX max power"
+ },
+ {
+  "num": 139,
+  "name": "144M TX MAX POWER",
+  "desc": "5 ~ 50 (P2 = 005 ~ 050)",
+  "digits": 3,
+  "range": [
+   5,
+   50
+  ],
+  "group": "TX max power"
+ },
+ {
+  "num": 140,
+  "name": "430M TX MAX POWER",
+  "desc": "5 ~ 50 (P2 = 005 ~ 050)",
+  "digits": 3,
+  "range": [
+   5,
+   50
+  ],
+  "group": "TX max power"
+ },
+ {
+  "num": 141,
+  "name": "TUNER SELECT",
+  "desc": "0: OFF 1: INTERNAL 2: EXTERNAL 3: ATAS 4: LAMP",
+  "digits": 1,
+  "options": {
+   "0": "OFF",
+   "1": "INTERNAL",
+   "2": "EXTERNAL",
+   "3": "ATAS",
+   "4": "LAMP"
+  },
+  "group": "Tuner & VOX"
+ },
+ {
+  "num": 142,
+  "name": "VOX SELECT",
+  "desc": "0: MIC 1: DATA",
+  "digits": 1,
+  "options": {
+   "0": "MIC",
+   "1": "DATA"
+  },
+  "group": "Tuner & VOX"
+ },
+ {
+  "num": 143,
+  "name": "VOX GAIN",
+  "desc": "000 ~ 100",
+  "digits": 3,
+  "range": [
+   0,
+   100
+  ],
+  "group": "Tuner & VOX"
+ },
+ {
+  "num": 144,
+  "name": "VOX DELAY",
+  "desc": "30 ~ 3000 msec (P2 = 0030 ~ 3000, 10 msec/step)",
+  "digits": 4,
+  "range": [
+   30,
+   3000
+  ],
+  "group": "Tuner & VOX",
+  "step": 10
+ },
+ {
+  "num": 145,
+  "name": "ANTI VOX GAIN",
+  "desc": "000 ~ 100",
+  "digits": 3,
+  "range": [
+   0,
+   100
+  ],
+  "group": "Tuner & VOX"
+ },
+ {
+  "num": 146,
+  "name": "DATA VOX GAIN",
+  "desc": "000 ~ 100",
+  "digits": 3,
+  "range": [
+   0,
+   100
+  ],
+  "group": "Tuner & VOX"
+ },
+ {
+  "num": 147,
+  "name": "DATA VOX DELAY",
+  "desc": "30 ~ 3000 msec (P2 = 0030 ~ 3000)",
+  "digits": 4,
+  "range": [
+   30,
+   3000
+  ],
+  "group": "Tuner & VOX",
+  "step": 10
+ },
+ {
+  "num": 148,
+  "name": "ANTI DVOX GAIN",
+  "desc": "000 ~ 100",
+  "digits": 3,
+  "range": [
+   0,
+   100
+  ],
+  "group": "Tuner & VOX"
+ },
+ {
+  "num": 149,
+  "name": "EMERGENCY FREQ TX",
+  "desc": "0: DISABLE 1: ENABLE",
+  "digits": 1,
+  "options": {
+   "0": "DISABLE",
+   "1": "ENABLE"
+  },
+  "warn": "Allows transmitting on the Alaska emergency frequency.",
+  "group": "Emergency & WIRES-X"
+ },
+ {
+  "num": 150,
+  "name": "PRT/WIRES FREQ",
+  "desc": "0: MANUAL 1: PRESET",
+  "digits": 1,
+  "options": {
+   "0": "MANUAL",
+   "1": "PRESET"
+  },
+  "group": "Emergency & WIRES-X"
+ },
+ {
+  "num": 151,
+  "name": "PRESET FREQUENCY",
+  "desc": "00030000 ~ 47000000",
+  "digits": 8,
+  "range": [
+   30000,
+   47000000
+  ],
+  "group": "Emergency & WIRES-X"
+ },
+ {
+  "num": 152,
+  "name": "SEARCH SETUP",
+  "desc": "0: HISTORY 1: ACTIVITY",
+  "digits": 1,
+  "options": {
+   "0": "HISTORY",
+   "1": "ACTIVITY"
+  },
+  "group": "Emergency & WIRES-X"
+ },
+ {
+  "num": 153,
+  "name": "WIRES DG-ID",
+  "desc": "00: AUTO 01: DG-ID 01 ~ 99: DG-ID 99",
+  "digits": 2,
+  "group": "Emergency & WIRES-X"
+ }
+]
