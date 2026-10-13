@@ -1,3 +1,4 @@
-dist/
 __pycache__/
-*.pkg.tar.*
+*.pyc
+*.tar.gz
+*.zip

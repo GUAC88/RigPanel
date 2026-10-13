@@ -3,6 +3,12 @@
 
 Serves http://localhost:<port> (default 8073). Talks to the radio's Enhanced (CAT) USB port.
 Per-station settings live in ~/.config/rigpanel/config.json (written by the installer).
+
+Copyright (C) 2026 Cody KJ5JDO
+This program is free software: you can redistribute it and/or modify it under the terms of the
+GNU General Public License as published by the Free Software Foundation, either version 3 of the
+License, or (at your option) any later version. It is distributed WITHOUT ANY WARRANTY; see the
+LICENSE file or <https://www.gnu.org/licenses/>.
 """
 import json
 import math
@@ -21,6 +27,7 @@ except ImportError:
     serial = None
 import threading
 import time
+import socketserver
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 if os.name == "nt":
@@ -35,6 +42,7 @@ DEFAULT_CONFIG = {
     "baud": 38400,
     "http_port": 8073,
     "winlink_freq": 145030000,
+    "hamlib_port": 4532,  # rigctld-compatible TCP port for VarAC, WSJT-X, etc. 0 = off
 }
 
 
@@ -123,6 +131,10 @@ SETTINGS_BY_KEY = {x["key"]: x for x in SETTINGS}
 # Quick Setup profiles: configure the whole radio for one job in one tap
 DEFAULT_PROFILES = [
     {"name": "Winlink (VARA FM)", "icon": "\u2709", "freq": int(CONFIG["winlink_freq"]), "mode": "DATA-FM",
+     "tone": None, "shift": "simplex", "squelch": 0, "power": 25},
+    {"name": "VarAC 2m", "icon": "\U0001F4AC", "freq": 144950000, "mode": "DATA-FM",
+     "tone": None, "shift": "simplex", "squelch": 0, "power": 25},
+    {"name": "VarAC 70cm", "icon": "\U0001F4AC", "freq": 439600000, "mode": "DATA-FM",
      "tone": None, "shift": "simplex", "squelch": 0, "power": 25},
     {"name": "FM Voice", "icon": "\U0001F399", "freq": 146520000, "mode": "FM",
      "tone": None, "shift": "simplex", "squelch": 20, "power": 25},
@@ -615,5 +627,160 @@ class Handler(BaseHTTPRequestHandler):
         self._json({"ok": True})
 
 
+# --- Hamlib rigctld-compatible server ---------------------------------------------------
+# Lets other programs (VarAC, WSJT-X, fldigi, ...) control the radio through RigPanel with
+# Hamlib model 2 "NET rigctl", so only RigPanel ever opens the CAT port.
+HAMLIB_MODES = {"1": "LSB", "2": "USB", "3": "CW", "4": "FM", "5": "AM", "6": "RTTY",
+                "7": "CWR", "8": "PKTLSB", "9": "RTTYR", "A": "PKTFM", "B": "FMN",
+                "C": "PKTUSB", "D": "AMN", "E": "C4FM"}
+HAMLIB_CODES = {v: k for k, v in HAMLIB_MODES.items()}
+PASSBAND = {"CW": 500, "CWR": 500, "RTTY": 500, "RTTYR": 500, "FM": 16000, "PKTFM": 16000,
+            "C4FM": 16000, "FMN": 9000, "AM": 9000, "AMN": 6000}
+LONG_NAMES = {"get_freq": "f", "set_freq": "F", "get_mode": "m", "set_mode": "M",
+              "get_ptt": "t", "set_ptt": "T", "get_vfo": "v", "set_vfo": "V",
+              "get_split_vfo": "s", "set_split_vfo": "S", "get_level": "l", "set_level": "L",
+              "vfo_op": "G", "get_powerstat": "get_powerstat", "chk_vfo": "chk_vfo",
+              "dump_state": "dump_state", "quit": "q"}
+DUMP_STATE = """1
+1
+0
+30000.000000 470000000.000000 0x1ff -1 -1 0x3 0x3
+0 0 0 0 0 0 0
+1800000.000000 470000000.000000 0x1ff 5000 100000 0x3 0x3
+0 0 0 0 0 0 0
+0x1ff 1
+0 0
+0x1ff 3000
+0x82 500
+0x821 16000
+0 0
+9999
+9999
+0
+0
+10 20
+0
+0x40000020
+0x40000020
+0x0
+0x0
+0x0
+0x0
+done
+"""
+RPRT_OK, RPRT_EINVAL, RPRT_ENIMPL, RPRT_EIO = "RPRT 0\n", "RPRT -1\n", "RPRT -11\n", "RPRT -6\n"
+
+
+def simplex_data():
+    """VARA FM / packet (PKTFM) is always simplex with no tone: clear any repeater setup."""
+    rig.set_shift("simplex")
+    rig.set_tone(None)
+
+
+def hamlib_command(line):
+    """Run one rigctld command line; return (reply text, keep connection open)."""
+    parts = line.split()
+    if not parts:
+        return "", True
+    c, args = parts[0], parts[1:]
+    if c.startswith("\\"):
+        c = LONG_NAMES.get(c[1:], c)
+    if c in ("q", "Q"):
+        return "", False
+    if c == "f":
+        fa = rig.cmd("FA;")
+        return (f"{int(fa[2:-1])}\n" if fa else RPRT_EIO), True
+    if c == "F":
+        rig.set_freq(round(float(args[0])))
+        # The radio's auto repeater shift can kick in on a new frequency; data stays simplex
+        md = rig.cmd("MD0;")
+        if md[3:4] == "A":
+            simplex_data()
+        return RPRT_OK, True
+    if c == "m":
+        md = rig.cmd("MD0;")
+        if not md:
+            return RPRT_EIO, True
+        mode = HAMLIB_MODES.get(md[3:4], "USB")
+        return f"{mode}\n{PASSBAND.get(mode, 3000)}\n", True
+    if c == "M":
+        code = HAMLIB_CODES.get(args[0].upper()) if args else None
+        if not code:
+            return RPRT_EINVAL, True
+        rig.cmd(f"MD0{code};", reply=False)
+        if code == "A":
+            simplex_data()
+        return RPRT_OK, True
+    if c == "t":
+        tx = rig.cmd("TX;")
+        return (f"{int(bool(tx) and tx[2:3] != '0')}\n" if tx else RPRT_EIO), True
+    if c == "T":
+        rig.cmd("TX1;" if args and args[0] != "0" else "TX0;", reply=False)
+        return RPRT_OK, True
+    if c == "v":
+        return "VFOA\n", True
+    if c in ("V", "S"):
+        return RPRT_OK, True
+    if c == "s":
+        return "0\nVFOA\n", True
+    if c == "l":
+        name = args[0].upper() if args else ""
+        if name == "RFPOWER":
+            pc = rig.cmd("PC;")
+            return (f"{int(pc[2:-1]) / 100:.2f}\n" if pc else RPRT_EIO), True
+        if name in ("STRENGTH", "RAWSTR"):
+            sm = rig.cmd("SM0;")
+            raw = int(sm[3:-1]) if sm else 0
+            # FT-991A meter: 0-255, S9 near 130; STRENGTH is dB relative to S9
+            return (f"{raw}\n" if name == "RAWSTR" else f"{round((raw - 130) * 0.45)}\n"), True
+        return "0\n", True
+    if c == "L":
+        if len(args) == 2 and args[0].upper() == "RFPOWER":
+            rig.set_power(float(args[1]) * 100)
+        return RPRT_OK, True
+    if c == "G":
+        if args and args[0].upper() == "TUNE":
+            rig.cmd("AC002;", reply=False)  # start the antenna tuner
+        return RPRT_OK, True
+    if c == "get_powerstat":
+        return "1\n", True
+    if c == "chk_vfo":
+        return "0\n", True
+    if c == "dump_state":
+        return DUMP_STATE, True
+    return RPRT_ENIMPL, True
+
+
+class HamlibHandler(socketserver.StreamRequestHandler):
+    def handle(self):
+        for raw in self.rfile:
+            try:
+                reply, keep = hamlib_command(raw.decode(errors="replace").strip())
+            except (ValueError, IndexError):
+                reply, keep = RPRT_EINVAL, True
+            if reply:
+                self.wfile.write(reply.encode())
+            if not keep:
+                break
+
+
+class HamlibServer(socketserver.ThreadingTCPServer):
+    daemon_threads = True
+    allow_reuse_address = True
+
+
+def start_hamlib():
+    port = int(CONFIG.get("hamlib_port") or 0)
+    if not port:
+        return
+    try:
+        srv = HamlibServer(("127.0.0.1", port), HamlibHandler)
+    except OSError as e:
+        print(f"Hamlib server not started on port {port}: {e}", flush=True)
+        return
+    threading.Thread(target=srv.serve_forever, daemon=True).start()
+
+
 if __name__ == "__main__":
+    start_hamlib()
     ThreadingHTTPServer(LISTEN, Handler).serve_forever()

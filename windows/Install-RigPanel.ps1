@@ -3,7 +3,7 @@
 #   -Reconfigure   re-run the setup questions on an existing install
 param([switch]$Reconfigure)
 $ErrorActionPreference = 'Stop'
-$Version = '1.0.0'
+$Version = '1.1.0'
 
 $Src     = Join-Path (Split-Path -Parent $PSScriptRoot) 'app'
 $AppDir  = Join-Path $env:LOCALAPPDATA 'RigPanel'
