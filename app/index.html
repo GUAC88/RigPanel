@@ -354,6 +354,7 @@
   @media (max-width: 900px) {
     .layout { grid-template-columns: 1fr; grid-template-rows: auto; }
     main, .micside, aside { grid-column: 1; grid-row: auto; }
+    main { order: 1; } .micside { order: 2; } aside { order: 3; }   /* phones: the radio first, then the mic */
     aside { position: static; height: 70vh; }
   }
   @media (max-width: 700px) {
@@ -546,6 +547,20 @@
   <p id="bg-msg" class="muted" style="margin:10px 0 0; font-size:13px"></p>
 </dialog>
 
+<dialog id="setup-dlg" aria-labelledby="setup-title">
+  <div class="dlg-h"><h2 id="setup-title">👋 Welcome to RigPanel</h2></div>
+  <form id="setup-form" class="form" method="dialog">
+    <p class="full muted" style="margin:0">Your callsign goes on the display and is the default net control. Your grid square is used
+      for distances and to find your local NOAA weather radio station. You can change both later.</p>
+    <label>Your callsign <input id="setup-call" autocomplete="off" spellcheck="false" style="text-transform:uppercase"
+      placeholder="e.g. KJ5ABC" required></label>
+    <label>Grid square <span class="muted">(optional)</span> <input id="setup-grid" autocomplete="off" spellcheck="false" placeholder="e.g. EM26av"></label>
+    <span class="full bad" id="setup-msg"></span>
+    <div class="full row" style="justify-content:flex-end">
+      <button type="button" id="setup-later">Later</button><button type="submit" class="primary">Save</button>
+    </div>
+  </form>
+</dialog>
 <dialog id="radio-dlg">
   <div class="dlg-h"><h2>📻 Radio setup</h2><button id="close-radio" aria-label="Close" style="min-height:30px; padding:2px 12px">✕</button></div>
   <form id="radio-form" class="form" method="dialog">
@@ -586,6 +601,9 @@ const fmt = hz => { const s = String(hz).padStart(9, "0"); return `${+s.slice(0,
 const esc = t => String(t ?? "").replace(/[&<>"]/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"}[c]));
 const has = f => !!caps && caps.features.includes(f);
 const inRange = hz => !caps || caps.ranges.some(([lo, hi]) => hz >= lo && hz <= hi);
+// Receive-only setups (NOAA weather radio) show when the radio can receive them, even outside its transmit bands
+const isWx = hz => hz >= 162.39e6 && hz <= 162.56e6;
+const canHear = hz => inRange(hz) || (isWx(hz) && (!caps || (caps.rx_ranges || caps.ranges).some(([lo, hi]) => hz >= lo && hz <= hi)));
 
 // ---- Theme ----------------------------------------------------------------------------
 const ACCENTS = {signal: ["#ff7a1a", "#ffb547"], ocean: ["#1f8fff", "#22d3ee"], aurora: ["#10b981", "#84cc16"], violet: ["#8b5cf6", "#ec4899"]};
@@ -644,6 +662,7 @@ function loadConfig() {
     $("ver").textContent = "v" + c.version;
     applyCaps(); renderLinks();
     $("open-net").hidden = !(c.trials || []).includes("net");
+    if (c.needs_setup && !loadConfig.asked && !$("setup-dlg").open) { loadConfig.asked = true; $("setup-dlg").showModal(); $("setup-call").focus(); }
   });
 }
 
@@ -672,9 +691,9 @@ $("vol-in").oninput = e => $("vol-v").textContent = e.target.value;
 $("tone-in").onchange = e => post("/api/tone", {hz: e.target.value || null});
 
 function renderProfiles() {
-  const list = profiles.map((p, i) => [p, i]).filter(([p]) => inRange(p.freq));
+  const list = profiles.map((p, i) => [p, i]).filter(([p]) => canHear(p.freq));
   $("profiles").innerHTML = list.map(([p, i]) =>
-    `<button data-profile="${i}"><span class="pic">${esc(p.icon || "📻")}</span><b>${esc(p.name)}</b>` +
+    `<button data-profile="${i}"${p.noaa ? ` title="NOAA Weather Radio ${esc(p.noaa)}"` : ""}><span class="pic">${esc(p.icon || "📻")}</span><b>${esc(p.name)}</b>` +
     `<span class="d">${fmt(p.freq)} · ${esc(p.mode)}${p.tone ? " · " + p.tone + " Hz" : ""} · SQL ${p.squelch ?? "–"} · ${p.power ?? "–"} W</span></button>`).join("")
     || `<div class="empty">None of the Quick Setups are on this radio's bands. Add your own in profiles.json.</div>`;
   markProfile();
@@ -864,7 +883,7 @@ $("r-save").onclick = async () => {
 
 // ---- Presets ----------------------------------------------------------------------------------------
 function renderPresets() {
-  const list = presets.map((p, i) => [p, i]).filter(([p]) => inRange(p.freq));
+  const list = presets.map((p, i) => [p, i]).filter(([p]) => canHear(p.freq));
   $("presets").innerHTML = list.map(([p, i]) =>
     `<button data-preset="${i}"><b>${esc(p.name)}</b><span>${fmt(p.freq)} · ${esc(p.mode)}${p.tone ? " · " + p.tone + " Hz" : ""}</span></button>`).join("")
     || `<div class="empty">No presets on this radio's bands yet.</div>`;
@@ -1136,6 +1155,16 @@ $("st-fix").onclick = async () => {
 loadStation(); setInterval(() => { if (!document.hidden) loadStation(); }, 5000);
 
 $("open-net").onclick = () => window.open("/net", "rigpanel-net");
+// First run (no callsign yet): ask for it
+$("setup-later").onclick = () => $("setup-dlg").close();
+$("setup-form").onsubmit = async e => {
+  e.preventDefault();
+  const r = await fetch("/api/station-setup", {method: "POST", headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({callsign: $("setup-call").value.trim(), grid: $("setup-grid").value.trim()})}).then(x => x.json()).catch(() => ({}));
+  if (!r.ok) { $("setup-msg").textContent = r.message || "Couldn't save. Is RigPanel running?"; return; }
+  $("setup-dlg").close(); loadConfig();
+  setTimeout(() => fetch("/api/profiles").then(x => x.json()).then(p => { profiles = p; renderProfiles(); }), 4000);   // NOAA station for the new location
+};
 
 // --- Ham links ({call} is replaced with your callsign) ---
 const HAM_LINKS = [

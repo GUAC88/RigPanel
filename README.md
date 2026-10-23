@@ -1,4 +1,4 @@
-# RigPanel 1.4.0
+# RigPanel 1.5.0
 
 A browser control panel for CAT-controlled ham radios: one-tap Quick Setups (Winlink VARA FM, VarAC 2m/70cm,
 NOAA weather), frequency/mode/tone controls with EQ-style volume/power/squelch faders, talking through the radio
@@ -6,6 +6,13 @@ with your **PC microphone**, a **station status** card that spots Winlink/VARA a
 Linux), quick links to popular ham sites, a callsign lookup card, your callsign on the display, four colour themes
 with light and dark modes, and a choice of backgrounds (patterns or your own photo). The whole panel fits on one
 screen on a 1080p monitor.
+
+### New in 1.5
+- **Windows installers**: `Setup.exe` and `.msi` with Python built in. Nothing else to install first.
+- **NOAA Weather** Quick Setup tunes to **your local weather radio transmitter**. It works out your county from
+  your FCC license location (or grid square) and picks the transmitter NOAA lists for that county.
+  It now also shows on radios that can receive weather radio but not transmit there, like the FT-991A.
+- First-run setup asks for your callsign and grid square in the panel. On phones the radio display comes first.
 
 ### New in 1.4
 - **Net log add-on** (optional at install): log check-ins when you run a net, with FCC name and location lookups,
@@ -55,7 +62,7 @@ Runs on **Linux (Arch, Debian, Ubuntu, Mint, Raspberry Pi OS)** and **Windows 10
 
 ### Linux
 ```
-tar xzf rigpanel-1.4.0.tar.gz
+tar xzf rigpanel-1.5.0.tar.gz
 cd rigpanel
 ./install.sh
 ```
@@ -71,16 +78,24 @@ Debian/Ubuntu) if you aren't already in it. Log out and back in afterwards.
 Needs: Python 3.8+ (preinstalled on most desktops). No other packages.
 
 ### Windows
-1. Unzip `rigpanel-1.4.0-windows.zip`.
-2. Double-click **`windows\Install-RigPanel.bat`**.
+Download **`RigPanel-1.5.0-Setup.exe`** from the [releases page](https://github.com/GUAC88/RigPanel/releases) and run it.
+- No Python needed: RigPanel brings its own (Python 3.14 with pyserial). Your PC's own Python is left alone.
+- Installs for your Windows account only (no admin rights), to `%LOCALAPPDATA%\Programs\RigPanel`.
+- Asks for your callsign and grid square, whether to include the **Net log add-on**, a Desktop shortcut, and
+  whether to start RigPanel at login. Remove it in **Settings → Apps**. Your settings are kept.
+- The installer isn't code-signed yet, so Windows SmartScreen may say "Windows protected your PC". Click
+  **More info → Run anyway**.
+- Upgrading from the 1.4 zip install: run the setup. It replaces the old copy and keeps your settings.
 
-It installs Python with winget if needed, adds pyserial, asks for your callsign and COM port, and creates
-Start Menu and Desktop shortcuts. If Windows shows no COM ports for the radio, install the
+For IT-managed installs there's **`RigPanel-1.5.0.msi`** (per-user, silent with `msiexec /i RigPanel-1.5.0.msi /qn`;
+features `NetLogAddon`, `DesktopShortcut`, `StartAtLogin` via `ADDLOCAL`/`REMOVE`). It asks no questions: RigPanel
+asks for your callsign the first time it opens. The script install from `rigpanel-1.5.0-windows.zip`
+(`windows\Install-RigPanel.bat`) still works if you'd rather use your own Python.
+
+If Windows shows no COM ports for the radio, install the
 [Silicon Labs CP210x driver](https://www.silabs.com/developers/usb-to-uart-bridge-vcp-drivers) (Yaesu, IC-7300, IC-9700).
 Yaesu radios show up as two COM ports. The panel needs the **Enhanced** one. Using Winlink? Leave the
 **Standard** one for VARA FM's PTT (see [Winlink with VARA FM](#winlink-with-vara-fm)).
-
-Remove it with **Start Menu → RigPanel → Uninstall RigPanel**.
 
 ## Radio settings
 - **Baud rate** must match the radio: Yaesu FT-991A MENU **031 CAT RATE** (default 38400); Icom **CI-V USB Baud Rate**
@@ -174,6 +189,9 @@ open. Then set up VARA FM once:
 | `app/index.html` | The whole user interface. One page of HTML, CSS and JavaScript with no frameworks. It polls the server once a second. |
 | `app/netlogcore.py`, `app/netexport.py`, `app/index-net.html` | The Net log add-on: log storage and API, PDF/Word export with letterhead, and its page. `app/netlog.py` runs the same thing as the stand-alone Net Log app. |
 | `app/menus.json` | The FT-991A MENU table (001-153), built from Yaesu's CAT Operation Reference Manual, with known misprints corrected. |
+| `app/nwr.json` | NOAA Weather Radio transmitters and the counties they serve, from NOAA's [County Coverage Listing](https://www.weather.gov/nwr/county_coverage) (public domain). Refresh it with `tools/update-nwr.py`. Your county comes from the FCC's [census area lookup](https://geo.fcc.gov/api/census/). |
+| `app/launch.py`, `app/stop.py` | Start the app in the background and open the browser; stop it before an upgrade or uninstall (used by the Windows installers). |
+| `installers/` | `build-windows.sh` builds the Windows `Setup.exe` (Inno Setup, run under Wine) and `.msi` (msitools) with Python built in. |
 | `install.sh` / `windows\*.ps1` | Per-user installers: copy files, write settings, create the menu entry and auto-start. |
 
 Your settings live in `~/.config/rigpanel/` on Linux or `%APPDATA%\RigPanel\` on Windows:

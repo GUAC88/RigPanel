@@ -8,7 +8,7 @@
 #        ./install.sh --callsign N0CALL --grid EM26 --yes   unattended
 set -euo pipefail
 
-VERSION="1.0.0"
+VERSION="1.1.0"
 HERE="$(cd "$(dirname "$0")" && pwd)"
 SRC="$HERE/app"; [ -d "$SRC" ] || SRC="$HERE/../app"   # package layout, or inside the RigPanel source tree
 APP_DIR="$HOME/.local/share/netlog"
@@ -20,7 +20,7 @@ DESKTOP_DIR="$HOME/.local/share/applications"
 ICON_DIR="$HOME/.local/share/icons/hicolor/scalable/apps"
 FILES="netlog.py netlogcore.py netexport.py index-net.html netlog.svg"
 
-CALL="" GRID="" HTTP_PORT="8074" YES=0 RECONF=0
+CALL="" GRID="" HTTP_PORT="8075" YES=0 RECONF=0
 
 bold() { printf '\033[1m%s\033[0m\n' "$*"; }
 info() { printf '  \033[32m✓\033[0m %s\n' "$*"; }
@@ -97,7 +97,7 @@ json.dump({"callsign": call, "grid": grid, "http_port": int(port)}, open(f, "w")
 PY
   info "Saved settings to $CFG"
 fi
-HTTP_PORT=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1])).get("http_port", 8074))' "$CFG")
+HTTP_PORT=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1])).get("http_port", 8075))' "$CFG")
 
 # --- Install files --------------------------------------------------------------
 echo; bold "Installing"

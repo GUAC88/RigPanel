@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Net Log: a stand-alone net control logger (the same log page as RigPanel's Net log add-on, without a radio).
 
-Serves http://localhost:8074 (change "http_port" in config.json). Python standard library only.
+Serves http://localhost:8075 (change "http_port" in config.json). Python standard library only.
 Settings and logs: ~/.config/netlog/ on Linux, %APPDATA%\\NetLog\\ on Windows."""
 import json
 import math
@@ -14,15 +14,16 @@ import urllib.request
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))   # netlogcore / netexport sit next to this file
+sys.dont_write_bytecode = True   # no __pycache__ folders in the install folder
 import netlogcore  # noqa: E402
 
-VERSION = "1.0.0"
+VERSION = "1.1.0"
 HERE = os.path.dirname(os.path.abspath(__file__))
 if os.name == "nt":
     CONFIG_DIR = os.path.join(os.environ.get("APPDATA") or os.path.expanduser("~"), "NetLog")
 else:
     CONFIG_DIR = os.path.expanduser("~/.config/netlog")
-CONFIG = {"callsign": "N0CALL", "grid": "", "http_port": 8074}
+CONFIG = {"callsign": "N0CALL", "grid": "", "http_port": 8075}
 try:
     with open(os.path.join(CONFIG_DIR, "config.json")) as f:
         CONFIG.update(json.load(f))
@@ -30,6 +31,23 @@ except (OSError, ValueError):
     pass
 CALL = str(CONFIG["callsign"]).upper()
 PORT = int(CONFIG["http_port"])
+CALLSIGN_RE = re.compile(r"^[A-Z0-9]{1,3}[0-9][A-Z0-9]{0,3}[A-Z]$")
+
+
+def station_setup(body):
+    """Save the callsign and grid square from the first-run screen (the .msi installer asks no questions)."""
+    global CALL
+    call = str(body.get("callsign") or "").strip().upper()
+    grid = str(body.get("grid") or "").strip()
+    if not CALLSIGN_RE.match(call):
+        raise ValueError(f"{call or 'That'} doesn't look like a callsign")
+    if grid and not re.fullmatch(r"[A-Ra-r]{2}\d{2}([A-Xa-x]{2})?", grid):
+        raise ValueError(f"{grid} isn't a grid square (e.g. EM26 or EM26av)")
+    CONFIG.update(callsign=call, grid=grid)
+    os.makedirs(CONFIG_DIR, exist_ok=True)
+    with open(os.path.join(CONFIG_DIR, "config.json"), "w") as f:
+        json.dump(CONFIG, f, indent=2)
+    CALL = call
 
 
 # --- callsign lookups (callook.info, FCC data, US calls) with distance from your grid square ---------------
@@ -115,7 +133,8 @@ class Handler(BaseHTTPRequestHandler):
             with open(os.path.join(HERE, "netlog.svg"), "rb") as f:
                 self._file(f.read(), "image/svg+xml")
         elif path == "/api/config":
-            self._json({"callsign": CALL, "grid": CONFIG.get("grid", ""), "version": VERSION, "standalone": True})
+            self._json({"callsign": CALL, "grid": CONFIG.get("grid", ""), "version": VERSION, "standalone": True,
+                        "needs_setup": CALL == "N0CALL" or not CALLSIGN_RE.match(CALL)})
         elif path == "/api/status":
             self._json({"ok": False, "standalone": True})
         elif path.startswith("/api/lookup?"):
@@ -141,7 +160,13 @@ class Handler(BaseHTTPRequestHandler):
         except ValueError:
             self.send_error(400)
             return
-        if not netlogcore.handle_post(self, self.path, body, CONFIG_DIR):
+        if self.path == "/api/station-setup":
+            try:
+                station_setup(body)
+                self._json({"ok": True})
+            except (OSError, ValueError) as e:
+                self._json({"ok": False, "message": str(e)}, 400)
+        elif not netlogcore.handle_post(self, self.path, body, CONFIG_DIR):
             self.send_error(404)
 
 

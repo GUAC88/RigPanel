@@ -4,7 +4,7 @@
 #   -Reconfigure   re-run the setup questions on an existing install
 param([switch]$Reconfigure)
 $ErrorActionPreference = 'Stop'
-$Version = '1.0.0'
+$Version = '1.1.0'
 
 $Src = Join-Path (Split-Path -Parent $PSScriptRoot) 'app'
 if (-not (Test-Path $Src)) { $Src = Join-Path (Split-Path -Parent (Split-Path -Parent $PSScriptRoot)) 'app' }   # inside the RigPanel source tree
@@ -74,13 +74,13 @@ if ((Test-Path $Cfg) -and -not $Reconfigure) {
         $ok = (-not $Grid) -or ($Grid -match '^[A-Ra-r]{2}[0-9]{2}([A-Xa-x]{2})?$')
         if (-not $ok) { Warn 'Invalid grid square, try again' }
     } until ($ok)
-    do { $HttpPort = Ask 'Web port for Net Log' '8074' } until ($HttpPort -match '^\d{4,5}$')
+    do { $HttpPort = Ask 'Web port for Net Log' '8075' } until ($HttpPort -match '^\d{4,5}$')
     New-Item -ItemType Directory -Force -Path $CfgDir | Out-Null
     Write-Utf8NoBom $Cfg ([ordered]@{ callsign = $Call; grid = $Grid; http_port = [int]$HttpPort } | ConvertTo-Json)
     Info "Saved settings to $Cfg"
 }
 $conf = Get-Content $Cfg -Raw | ConvertFrom-Json
-$HttpPort = if ($conf.http_port) { $conf.http_port } else { 8074 }
+$HttpPort = if ($conf.http_port) { $conf.http_port } else { 8075 }
 
 # --- Install files --------------------------------------------------------------------
 Write-Host "`nInstalling" -ForegroundColor Cyan

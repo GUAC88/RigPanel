@@ -229,6 +229,16 @@
   </section>
 </aside>
 </div>
+<dialog id="setup-dlg" aria-labelledby="setup-title">
+  <form id="setup-form" method="dialog">
+    <h3 id="setup-title">👋 Welcome to Net Log</h3>
+    <p class="lh-hint">Your callsign is the default net control. Your grid square is used for check-in distances. You can change both later.</p>
+    <label class="f">Your callsign <input id="setup-call" autocomplete="off" spellcheck="false" style="text-transform:uppercase" placeholder="e.g. KJ5ABC"></label>
+    <label class="f">Grid square (optional) <input id="setup-grid" autocomplete="off" spellcheck="false" placeholder="e.g. EM26av"></label>
+    <span class="ci-msg bad" id="setup-msg"></span>
+    <div class="dlg-btns"><button type="button" id="setup-later">Later</button><button type="submit" class="primary">Save</button></div>
+  </form>
+</dialog>
 <dialog id="lh-dlg" aria-labelledby="lh-title">
   <form id="lh-form" method="dialog">
     <h3 id="lh-title">🏷 Letterhead for PDF and Word exports</h3>
@@ -532,7 +542,18 @@ $("past").addEventListener("click", async e => {
   if (open) { try { log = await (await fetch(`/api/netlog?id=${encodeURIComponent(open.id)}`)).json(); log.entries = log.entries || []; toast("Resumed the open net."); } catch {} }
   if (!log) log = blank();
   showHeader(); render(); loadPast(); $("ci-call").focus();
+  if (conf.needs_setup) { $("setup-dlg").showModal(); $("setup-call").focus(); }
 })();
+$("setup-later").onclick = () => $("setup-dlg").close();
+$("setup-form").onsubmit = async e => {
+  e.preventDefault();
+  const call = $("setup-call").value.trim().toUpperCase();
+  const r = await post("/api/station-setup", {callsign: call, grid: $("setup-grid").value.trim()}).catch(() => ({}));
+  if (!r.ok) { $("setup-msg").textContent = r.message || "Couldn't save. Is Net Log running?"; return; }
+  conf.callsign = call; conf.needs_setup = false;
+  if (!log.ncs || log.ncs === "N0CALL") { log.ncs = call; showHeader(); save(); }
+  $("setup-dlg").close(); toast("Saved. Welcome, " + call + "!");
+};
 </script>
 </body>
 </html>

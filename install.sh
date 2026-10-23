@@ -9,7 +9,7 @@
 #        add --netlog or --no-netlog to choose the Net log add-on without being asked
 set -euo pipefail
 
-VERSION="1.4.0"
+VERSION="1.5.0"
 SRC="$(cd "$(dirname "$0")" && pwd)/app"
 APP_DIR="$HOME/.local/share/rigpanel"
 CFG_DIR="$HOME/.config/rigpanel"
@@ -147,7 +147,7 @@ fi
 # --- Install files --------------------------------------------------------------
 echo; bold "Installing"
 mkdir -p "$APP_DIR" "$BIN_DIR" "$DESKTOP_DIR" "$ICON_DIR"
-install -m 644 "$SRC"/index.html "$SRC"/menus.json "$SRC"/rigpanel.svg "$SRC"/radios.py "$APP_DIR"/
+install -m 644 "$SRC"/index.html "$SRC"/menus.json "$SRC"/rigpanel.svg "$SRC"/radios.py "$SRC"/nwr.json "$APP_DIR"/
 install -m 755 "$SRC"/rigpanel.py "$APP_DIR"/
 install -m 644 "$SRC"/rigpanel.svg "$ICON_DIR"/rigpanel.svg
 echo "$VERSION" > "$APP_DIR/VERSION"

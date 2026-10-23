@@ -140,6 +140,17 @@ def s_meter(db):
     return round(bar, 1), label
 
 
+# Receive-only coverage beyond the transmit bands (manufacturers' specs), e.g. airband and NOAA weather radio
+RECEIVE_EXTRA = {
+    "FT-991A": [(118_000_000, 164_000_000), (420_000_000, 470_000_000)],
+    "FT-991": [(118_000_000, 164_000_000), (420_000_000, 470_000_000)],
+    "IC-7100": [(30_000, 199_999_999), (400_000_000, 470_000_000)],
+    "IC-705": [(30_000, 199_999_999), (400_000_000, 470_000_000)],
+    "IC-7000": [(30_000, 199_999_999), (400_000_000, 470_000_000)],
+    "IC-9100": [(136_000_000, 174_000_000)],
+}
+
+
 # --- Driver interface ------------------------------------------------------------------------
 class Radio:
     """Base class. Values: power in watts, volume and squelch 0-100 %, tone in Hz (None = off)."""
@@ -153,8 +164,10 @@ class Radio:
     mic_hint = ""
 
     def caps(self):
+        rx = list(self.ranges) + RECEIVE_EXTRA.get(self.model, [])
         return {"model": self.model, "maker": self.maker, "family": self.family, "modes": self.buttons, "power": list(self.power),
-                "ranges": [list(r) for r in self.ranges], "features": sorted(self.features), "mic_hint": self.mic_hint}
+                "ranges": [list(r) for r in self.ranges], "rx_ranges": [list(r) for r in rx],
+                "features": sorted(self.features), "mic_hint": self.mic_hint}
 
     def close(self):
         pass

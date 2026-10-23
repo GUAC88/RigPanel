@@ -4,7 +4,7 @@
 #   -NetLog / -NoNetLog   install (or leave out) the Net log add-on without being asked
 param([switch]$Reconfigure, [switch]$NetLog, [switch]$NoNetLog)
 $ErrorActionPreference = 'Stop'
-$Version = '1.4.0'
+$Version = '1.5.0'
 
 $Src     = Join-Path (Split-Path -Parent $PSScriptRoot) 'app'
 $AppDir  = Join-Path $env:LOCALAPPDATA 'RigPanel'
@@ -151,7 +151,7 @@ Get-CimInstance Win32_Process -Filter "Name like 'python%'" -ErrorAction Silentl
     Where-Object { $_.CommandLine -like '*RigPanel*rigpanel.py*' } |
     ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }
 New-Item -ItemType Directory -Force -Path $AppDir | Out-Null
-foreach ($f in @('rigpanel.py', 'radios.py', 'index.html', 'menus.json', 'rigpanel.svg', 'rigpanel.ico')) {
+foreach ($f in @('rigpanel.py', 'radios.py', 'index.html', 'menus.json', 'nwr.json', 'rigpanel.svg', 'rigpanel.ico')) {
     Copy-Item -Force (Join-Path $Src $f) $AppDir
 }
 foreach ($f in $NetLogFiles) {

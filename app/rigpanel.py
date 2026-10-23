@@ -23,11 +23,14 @@ import urllib.request
 import threading
 import time
 import socketserver
+import sys
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
-import radios
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))   # radios / netlogcore sit next to this file (also under an embedded Python)
+sys.dont_write_bytecode = True   # no __pycache__ folders in the install folder (uninstallers leave nothing behind)
+import radios  # noqa: E402
 
-VERSION = "1.4.0"
+VERSION = "1.5.0"
 
 if os.name == "nt":
     CONFIG_DIR = os.path.join(os.environ.get("APPDATA") or os.path.expanduser("~"), "RigPanel")
@@ -102,8 +105,6 @@ DEFAULT_PROFILES = [
      "tone": None, "shift": "simplex", "squelch": 0, "power": 25},
     {"name": "FM Voice", "icon": "\U0001F399", "freq": 146520000, "mode": "FM",
      "tone": None, "shift": "simplex", "squelch": 20, "power": 25},
-    {"name": "FM Repeater 443.85", "icon": "\U0001F4E1", "freq": 443850000, "mode": "FM",
-     "tone": 88.5, "shift": "+", "squelch": 20, "power": 25},
     {"name": "NOAA Weather", "icon": "\u26C5", "freq": 162550000, "mode": "FM",
      "tone": None, "shift": "simplex", "squelch": 20, "power": 5},
 ]
@@ -137,6 +138,26 @@ def save_presets(presets):
 
 
 MYCALL = CONFIG["callsign"]
+CALLSIGN_RE = re.compile(r"^[A-Z0-9]{1,3}[0-9][A-Z0-9]{0,3}[A-Z]$")
+
+
+def needs_setup():
+    """First run (e.g. after the .msi installer, which asks no questions): no real callsign yet."""
+    return MYCALL == "N0CALL" or not CALLSIGN_RE.match(MYCALL)
+
+
+def station_setup(body):
+    """Save the callsign and grid square from the panel's first-run screen."""
+    global MYCALL
+    call = str(body.get("callsign") or "").strip().upper()
+    grid = str(body.get("grid") or "").strip()
+    if not CALLSIGN_RE.match(call):
+        raise ValueError(f"{call or 'That'} doesn't look like a callsign")
+    if grid and not re.fullmatch(r"[A-Ra-r]{2}\d{2}([A-Xa-x]{2})?", grid):
+        raise ValueError(f"{grid} isn't a grid square (e.g. EM26 or EM26av)")
+    save_config({"callsign": call, "grid": grid})
+    MYCALL = call
+    _noaa.update(t=0, pick=None)   # new location: pick the NOAA transmitter again
 LOOKUPS_FILE = os.path.join(CONFIG_DIR, "lookups.json")
 _lookup_cache = {}
 
@@ -225,6 +246,85 @@ def my_location():
     except OSError:
         pass
     return grid_to_latlon(CONFIG.get("grid", ""))
+
+
+# --- NOAA Weather Radio: the transmitter that serves your county -------------------------------------
+# nwr.json is built from NOAA's County Coverage Listing (tools/update-nwr.py). Your county comes from your
+# FCC license location (or grid square) through the FCC's census area lookup, cached in the config folder.
+NWR_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "nwr.json")
+NWR_CACHE = os.path.join(CONFIG_DIR, "nwr-location.json")
+WX_BAND = (162_390_000, 162_560_000)
+_noaa = {"t": 0, "pick": None}
+_noaa_lock = threading.Lock()
+
+
+def county_fips(lat, lon):
+    key = f"{lat:.3f},{lon:.3f}"
+    try:
+        with open(NWR_CACHE) as f:
+            c = json.load(f)
+        if c.get("key") == key and c.get("fips"):
+            return c["fips"], c.get("county", "")
+    except (OSError, ValueError):
+        pass
+    url = f"https://geo.fcc.gov/api/census/area?lat={lat:.6f}&lon={lon:.6f}&censusYear=2020&format=json"
+    with urllib.request.urlopen(urllib.request.Request(url, headers={"User-Agent": f"RigPanel/{VERSION}"}), timeout=10) as r:
+        res = (json.load(r).get("results") or [{}])[0]
+    fips, county = res.get("county_fips", ""), f"{res.get('county_name', '')}, {res.get('state_code', '')}".strip(", ")
+    if fips:
+        with open(NWR_CACHE, "w") as f:
+            json.dump({"key": key, "fips": fips, "county": county}, f)
+    return fips, county
+
+
+def noaa_pick():
+    """The NOAA Weather Radio transmitter to listen to: the nearest in-service one NOAA lists for your county,
+    else the nearest in-service one within 100 miles. Recomputed every 12 hours."""
+    with _noaa_lock:
+        if _noaa["pick"] is not None and time.time() - _noaa["t"] < 12 * 3600:
+            return _noaa["pick"] or None
+        pick = {}
+        try:
+            with open(NWR_FILE) as f:
+                nwr = json.load(f)
+            me = my_location()
+            if me and me.get("lat") is not None:
+                county, cands = "", []
+                try:
+                    fips, county = county_fips(me["lat"], me["lon"])
+                    cands = nwr["counties"].get("0" + fips, [])
+                except (OSError, ValueError):
+                    pass
+                def miles(call):
+                    t = nwr["tx"][call]
+                    return distance_bearing(me, {"lat": t[4], "lon": t[5]})[0]
+                ok = [c for c in cands if c in nwr["tx"] and nwr["tx"][c][7] != "OUT OF SERVICE"]
+                if not ok:   # county unknown (offline) or nothing listed: nearest working transmitter
+                    near = sorted((miles(c), c) for c, t in nwr["tx"].items() if t[7] == "NORMAL")
+                    ok, county = [c for m, c in near[:3] if m <= 100], ""
+                ok.sort(key=lambda c: (nwr["tx"][c][7] != "NORMAL", miles(c)))
+                if ok:
+                    t = nwr["tx"][ok[0]]
+                    pick = {"call": ok[0], "site": t[0], "state": t[2], "freq": int(round(t[3] * 1e6)), "miles": round(miles(ok[0])),
+                            "county": county, "status": t[7],
+                            "others": [{"call": c, "site": nwr["tx"][c][0], "freq": int(round(nwr["tx"][c][3] * 1e6))} for c in ok[1:]]}
+        except (OSError, ValueError, KeyError):
+            pass
+        _noaa.update(t=time.time(), pick=pick)
+        return pick or None
+
+
+def profiles_for_here():
+    """Quick Setups as shown: any NOAA Weather one is tuned to your local transmitter."""
+    out = []
+    for p in load_profiles():
+        if WX_BAND[0] <= int(p.get("freq") or 0) <= WX_BAND[1]:
+            w = noaa_pick()
+            if w:
+                p = dict(p, freq=w["freq"], name=f"NOAA Weather · {w['site']}",
+                         noaa=f"{w['call']} {w['site']}, {w['state']} · {w['miles']} mi" + (f" · serves {w['county']}" if w["county"] else ""))
+        out.append(p)
+    return out
 
 
 def load_lookups():
@@ -817,7 +917,7 @@ class Handler(BaseHTTPRequestHandler):
             self._json({"callsign": MYCALL, "grid": CONFIG.get("grid", ""), "version": VERSION,
                         "background": background_settings(),
                         "radio": drv.model if drv else "", "caps": drv.caps() if drv else None,
-                        "trials": [k[1:] for k in TRIAL_PAGES if trial_page(k)]})
+                        "trials": [k[1:] for k in TRIAL_PAGES if trial_page(k)], "needs_setup": needs_setup()})
         elif netlogcore and netlogcore.handle_get(self, self.path, CONFIG_DIR, MYCALL):
             pass
         elif self.path == "/api/station":
@@ -837,7 +937,7 @@ class Handler(BaseHTTPRequestHandler):
         elif self.path == "/api/settings":
             self._json(rig.read_settings())
         elif self.path == "/api/profiles":
-            self._json(load_profiles())
+            self._json(profiles_for_here())
         elif self.path.split("?")[0] == "/background":
             try:
                 with open(BACKGROUND_FILE, "rb") as f:
@@ -925,6 +1025,12 @@ class Handler(BaseHTTPRequestHandler):
             return
         elif netlogcore and netlogcore.handle_post(self, p, body, CONFIG_DIR):
             return
+        elif p == "/api/station-setup":
+            try:
+                station_setup(body)
+            except (OSError, ValueError) as e:
+                self._json({"ok": False, "message": str(e)}, 400)
+                return
         elif p == "/api/station/fix-audio":
             self._json(fix_vara_audio())
             return
@@ -1113,4 +1219,5 @@ if __name__ == "__main__":
     rig.search()   # recover_ptt() runs once the radio is found
     threading.Thread(target=pc_ptt.watchdog, daemon=True).start()
     start_hamlib()
+    threading.Thread(target=noaa_pick, daemon=True).start()   # look up the local NOAA transmitter in the background
     ThreadingHTTPServer(LISTEN, Handler).serve_forever()

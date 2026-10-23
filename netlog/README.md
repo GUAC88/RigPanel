@@ -1,4 +1,4 @@
-# Net Log 1.0.0
+# Net Log 1.1.0
 
 A browser-based logger for whoever is running net control on a ham radio net. It works on its own, with no radio
 connected, and is also available as an add-on inside [RigPanel](https://github.com/GUAC88/RigPanel).
@@ -26,23 +26,25 @@ Runs on **Linux** and **Windows 10/11** with Python 3.8+ and nothing else to ins
 ## Install
 ### Linux
 ```
-tar xzf netlog-1.0.0.tar.gz
+tar xzf netlog-1.1.0.tar.gz
 cd netlog
 ./install.sh
 ```
 It asks for your callsign (the default net control) and grid square (for distances), then adds **Net Log** to your
-app menu and starts it in the background at login. Open it at http://localhost:8074.
+app menu and starts it in the background at login. Open it at http://localhost:8075.
 
 - Change settings: `./install.sh --reconfigure`
 - Unattended: `./install.sh --yes --callsign N0CALL --grid EM26`
 - Remove: `./uninstall.sh` (add `--purge` to also delete settings **and saved logs**)
 
 ### Windows
-1. Unzip `netlog-1.0.0-windows.zip`.
-2. Double-click **`windows\Install-NetLog.bat`**.
+Download **`NetLog-1.1.0-Setup.exe`** from the [releases page](https://github.com/GUAC88/RigPanel/releases) and run it.
+It brings its own Python, so there's nothing to install first. It installs for your account only (no admin rights),
+asks for your callsign and grid square, and adds Start Menu and Desktop shortcuts. Remove it in **Settings → Apps**;
+your logs are kept. SmartScreen may warn because the installer isn't code-signed yet: **More info → Run anyway**.
 
-It installs Python with winget if needed and creates Start Menu and Desktop shortcuts. Remove it with **Start Menu → Net Log →
-Uninstall Net Log**.
+For managed installs use **`NetLog-1.1.0.msi`** (`msiexec /i NetLog-1.1.0.msi /qn`). Net Log asks for your callsign when it first opens.
+The script install from `netlog-1.1.0-windows.zip` (`windows\Install-NetLog.bat`) still works with your own Python.
 
 ## Where things are kept
 | | Linux | Windows |
@@ -51,7 +53,7 @@ Uninstall Net Log**.
 | Settings (`config.json`), letterhead | `~/.config/netlog/` | `%APPDATA%\NetLog\` |
 | Net logs (one JSON file per net) | `~/.config/netlog/netlogs/` | `%APPDATA%\NetLog\netlogs\` |
 
-`config.json` holds `callsign`, `grid` and `http_port` (default 8074). Net Log only listens on `localhost`.
+`config.json` holds `callsign`, `grid` and `http_port` (default 8075). Net Log only listens on `localhost`.
 
 ## Using it with RigPanel
 RigPanel's installer offers the same logger as an add-on, opened from a **📋 Net log** button. With a radio

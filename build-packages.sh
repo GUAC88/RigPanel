@@ -2,19 +2,19 @@
 # Build the release downloads into ./dist:
 #   rigpanel-X.Y.Z.tar.gz, rigpanel-X.Y.Z-windows.zip   RigPanel (the Net log add-on is offered by its installers)
 #   netlog-A.B.C.tar.gz,   netlog-A.B.C-windows.zip     the stand-alone Net Log app
-# Versions come from install.sh and netlog/install.sh.
+# Versions come from install.sh and netlog/install.sh. The Windows Setup.exe/.msi come from installers/build-windows.sh.
 set -euo pipefail
 cd "$(dirname "$0")"
 RP=$(sed -n 's/^VERSION="\(.*\)"/\1/p' install.sh)
 NL=$(sed -n 's/^VERSION="\(.*\)"/\1/p' netlog/install.sh)
-OUT="$PWD/dist"; rm -rf "$OUT"; mkdir -p "$OUT"
+OUT="$PWD/dist"; mkdir -p "$OUT"; rm -f "$OUT"/rigpanel-*.tar.gz "$OUT"/rigpanel-*-windows.zip "$OUT"/netlog-*.tar.gz "$OUT"/netlog-*-windows.zip
 STAGE=$(mktemp -d); trap 'rm -rf "$STAGE"' EXIT
 
 python3 - "$PWD" "$STAGE" "$OUT" "$RP" "$NL" <<'PY'
 import os, shutil, sys, tarfile, zipfile
 src, stage, out, rp, nl = sys.argv[1:]
 ADDON = ["index-net.html", "netlogcore.py", "netexport.py"]
-CORE = ["rigpanel.py", "radios.py", "index.html", "menus.json", "rigpanel.svg", "rigpanel.ico"]
+CORE = ["rigpanel.py", "radios.py", "index.html", "menus.json", "nwr.json", "rigpanel.svg", "rigpanel.ico"]
 NETLOG_APP = ["netlog.py", "netlogcore.py", "netexport.py", "index-net.html", "netlog.svg", "netlog.ico"]
 
 def copy(rel, dest_root, dest_rel=None):
@@ -36,7 +36,7 @@ def zipup(folder, name, files):
 
 # RigPanel: the whole project except trial pages and build leftovers
 rp_dir = os.path.join(stage, "rigpanel")
-skip_dirs = {".git", "__pycache__", "dist"}
+skip_dirs = {".git", "__pycache__", "dist", "cache"}   # cache = installer downloads and Wine prefix
 for root, dirs, files in os.walk(src):
     dirs[:] = [d for d in dirs if d not in skip_dirs]
     for f in files:
