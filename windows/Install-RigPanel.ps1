@@ -1,9 +1,10 @@
 # RigPanel installer for Windows 10/11 - browser control panel for CAT-controlled ham radios.
 # Installs for the current user only. Run via Install-RigPanel.bat (double-click).
 #   -Reconfigure   re-run the setup questions on an existing install
-param([switch]$Reconfigure)
+#   -NetLog / -NoNetLog   install (or leave out) the Net log add-on without being asked
+param([switch]$Reconfigure, [switch]$NetLog, [switch]$NoNetLog)
 $ErrorActionPreference = 'Stop'
-$Version = '1.3.0'
+$Version = '1.4.0'
 
 $Src     = Join-Path (Split-Path -Parent $PSScriptRoot) 'app'
 $AppDir  = Join-Path $env:LOCALAPPDATA 'RigPanel'
@@ -132,13 +133,33 @@ $pttTip = if ($stdPort) { "$stdPort (the radio's Standard port)" } else { "the r
 Write-Host "  For Winlink, set VARA FM's sound card to the radio's USB Audio CODEC (input and output),"
 Write-Host "  and its PTT to $pttTip with RTS. On the FT-991A also set MENU 076 FM PKT PTT SELECT = RTS."
 
+# --- Optional add-on: Net log --------------------------------------------------------
+$NetLogFiles = @('index-net.html', 'netlogcore.py', 'netexport.py')
+if ($NetLog) { $WantNetLog = $true }
+elseif ($NoNetLog) { $WantNetLog = $false }
+else {
+    Write-Host "`nAdd-ons" -ForegroundColor Cyan
+    Write-Host '  Net log: log check-ins when you run a net (FCC name/location lookup, traffic and short-time flags),'
+    Write-Host '  then export to PDF or Word with your club''s letterhead, or CSV. Opens from a button in the panel.'
+    $def = if ((Test-Path $AppDir) -and -not (Test-Path (Join-Path $AppDir 'netlogcore.py'))) { 'n' } else { 'y' }   # keep an earlier choice
+    $WantNetLog = (Ask 'Install the Net log add-on? (y/n)' $def) -match '^[Yy]'
+}
+
 # --- Install files --------------------------------------------------------------------
 Write-Host "`nInstalling" -ForegroundColor Cyan
 Get-CimInstance Win32_Process -Filter "Name like 'python%'" -ErrorAction SilentlyContinue |
     Where-Object { $_.CommandLine -like '*RigPanel*rigpanel.py*' } |
     ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }
 New-Item -ItemType Directory -Force -Path $AppDir | Out-Null
-Copy-Item -Force (Join-Path $Src '*') $AppDir
+foreach ($f in @('rigpanel.py', 'radios.py', 'index.html', 'menus.json', 'rigpanel.svg', 'rigpanel.ico')) {
+    Copy-Item -Force (Join-Path $Src $f) $AppDir
+}
+foreach ($f in $NetLogFiles) {
+    if ($WantNetLog) { Copy-Item -Force (Join-Path $Src $f) $AppDir }
+    else { Remove-Item -Force -ErrorAction SilentlyContinue (Join-Path $AppDir $f) }
+}
+if ($WantNetLog) { Info "Net log add-on installed (Net log button in the panel; logs kept in $CfgDir\netlogs)" }
+else { Info 'Net log add-on not installed (your saved net logs, if any, are kept)' }
 Copy-Item -Force (Join-Path $PSScriptRoot 'Uninstall-RigPanel.ps1') $AppDir
 Write-Utf8NoBom (Join-Path $AppDir 'VERSION') $Version
 Info "App files -> $AppDir"

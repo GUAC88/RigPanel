@@ -27,7 +27,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 import radios
 
-VERSION = "1.3.0"
+VERSION = "1.4.0"
 
 if os.name == "nt":
     CONFIG_DIR = os.path.join(os.environ.get("APPDATA") or os.path.expanduser("~"), "RigPanel")
@@ -184,12 +184,13 @@ def distance_bearing(a, b):
     return round(miles, 1), round((math.degrees(math.atan2(y, x)) + 360) % 360)
 
 
-def lookup_with_distance(call):
+def lookup_with_distance(call, remember=True):
     res = dict(callook(call))
     if res.get("status") == "VALID" and res.get("lat") is not None:
         me = my_location()
         if me and res["call"] != MYCALL:
             res["miles"], res["bearing"] = distance_bearing(me, res)
+    if remember and res.get("status") == "VALID" and res.get("lat") is not None:
         hist = load_lookups()
         hist = [h for h in hist if h["call"] != res["call"]]
         hist.insert(0, {"call": res["call"], "name": res["name"], "cityState": res["cityState"],
@@ -735,8 +736,23 @@ def radio_settings(body):
 
 
 PAGE_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "index.html")
-# Optional alternative layout to try side by side with the main one, at /new
-NEW_PAGE_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "index-new.html")
+# Optional pages, served only when their files are installed next to index.html. The Net log add-on also needs
+# netlogcore.py + netexport.py (the installer copies all three when you choose the add-on).
+try:
+    import netlogcore
+except ImportError:
+    netlogcore = None
+TRIAL_PAGES = {"/new": "index-new.html", "/net": "index-net.html"}
+
+
+def trial_page(path):
+    if path == "/net" and not netlogcore:
+        return None
+    f = TRIAL_PAGES.get(path)
+    f = f and os.path.join(os.path.dirname(PAGE_PATH), f)
+    return f if f and os.path.exists(f) else None
+
+
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -751,6 +767,16 @@ class Handler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(b)
 
+    def _file(self, data, ctype, name=None):
+        self.send_response(200)
+        self.send_header("Content-Type", ctype)
+        self.send_header("Content-Length", str(len(data)))
+        if name:
+            self.send_header("Content-Disposition", f'attachment; filename="{name}"')
+        self.send_header("Cache-Control", "no-store")
+        self.end_headers()
+        self.wfile.write(data)
+
     def do_GET(self):
         try:
             self._get()
@@ -764,8 +790,8 @@ class Handler(BaseHTTPRequestHandler):
             self._json({"ok": False, "message": rig.message}, 503)
 
     def _get(self):
-        if self.path == "/" or (self.path == "/new" and os.path.exists(NEW_PAGE_PATH)):
-            PAGE = open(PAGE_PATH if self.path == "/" else NEW_PAGE_PATH, "rb").read()
+        if self.path == "/" or trial_page(self.path):
+            PAGE = open(PAGE_PATH if self.path == "/" else trial_page(self.path), "rb").read()
             self.send_response(200)
             self.send_header("Content-Type", "text/html; charset=utf-8")
             self.send_header("Content-Length", str(len(PAGE)))
@@ -783,14 +809,17 @@ class Handler(BaseHTTPRequestHandler):
         elif self.path.startswith("/api/lookup?"):
             q = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
             try:
-                self._json(lookup_with_distance(q.get("call", [""])[0]))
+                self._json(lookup_with_distance(q.get("call", [""])[0], remember=q.get("quiet", ["0"])[0] != "1"))
             except OSError:
                 self._json({"status": "OFFLINE"})
         elif self.path == "/api/config":
             drv = rig.drv
             self._json({"callsign": MYCALL, "grid": CONFIG.get("grid", ""), "version": VERSION,
                         "background": background_settings(),
-                        "radio": drv.model if drv else "", "caps": drv.caps() if drv else None})
+                        "radio": drv.model if drv else "", "caps": drv.caps() if drv else None,
+                        "trials": [k[1:] for k in TRIAL_PAGES if trial_page(k)]})
+        elif netlogcore and netlogcore.handle_get(self, self.path, CONFIG_DIR, MYCALL):
+            pass
         elif self.path == "/api/station":
             self._json(station_status())
         elif self.path == "/api/radio":
@@ -842,6 +871,8 @@ class Handler(BaseHTTPRequestHandler):
         if self.path == "/api/background-photo":
             self._json(*save_background_photo(self.rfile.read(n) if 0 < n <= BACKGROUND_MAX else None, n))
             return
+        if netlogcore and netlogcore.handle_raw_post(self, self.path, n, CONFIG_DIR):
+            return
         try:
             body = json.loads(self.rfile.read(n) or b"{}")
         except ValueError:
@@ -891,6 +922,8 @@ class Handler(BaseHTTPRequestHandler):
                 self._json({"ok": True, "background": save_background_settings(body)})
             except (ValueError, TypeError) as e:
                 self._json({"ok": False, "message": str(e)}, 400)
+            return
+        elif netlogcore and netlogcore.handle_post(self, p, body, CONFIG_DIR):
             return
         elif p == "/api/station/fix-audio":
             self._json(fix_vara_audio())

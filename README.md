@@ -1,4 +1,4 @@
-# RigPanel 1.3.0
+# RigPanel 1.4.0
 
 A browser control panel for CAT-controlled ham radios: one-tap Quick Setups (Winlink VARA FM, VarAC 2m/70cm,
 NOAA weather), frequency/mode/tone controls with EQ-style volume/power/squelch faders, talking through the radio
@@ -6,6 +6,12 @@ with your **PC microphone**, a **station status** card that spots Winlink/VARA a
 Linux), quick links to popular ham sites, a callsign lookup card, your callsign on the display, four colour themes
 with light and dark modes, and a choice of backgrounds (patterns or your own photo). The whole panel fits on one
 screen on a 1080p monitor.
+
+### New in 1.4
+- **Net log add-on** (optional at install): log check-ins when you run a net, with FCC name and location lookups,
+  traffic, short-time and mobile flags, auto-save, and **PDF / Word export with your club's letterhead** (built
+  from its name, tagline and logo, or your own uploaded letterhead image), CSV and a copy-and-paste summary.
+- The same logger is available as the stand-alone **[Net Log](netlog/README.md)** app, for when you don't have a radio connected.
 
 ### New in 1.3
 - **Levels** are vertical faders beside the frequency display.
@@ -46,7 +52,7 @@ Runs on **Linux (Arch, Debian, Ubuntu, Mint, Raspberry Pi OS)** and **Windows 10
 
 ### Linux
 ```
-tar xzf rigpanel-1.3.0.tar.gz
+tar xzf rigpanel-1.4.0.tar.gz
 cd rigpanel
 ./install.sh
 ```
@@ -62,7 +68,7 @@ Debian/Ubuntu) if you aren't already in it. Log out and back in afterwards.
 Needs: Python 3.8+ (preinstalled on most desktops). No other packages.
 
 ### Windows
-1. Unzip `rigpanel-1.3.0-windows.zip`.
+1. Unzip `rigpanel-1.4.0-windows.zip`.
 2. Double-click **`windows\Install-RigPanel.bat`**.
 
 It installs Python with winget if needed, adds pyserial, asks for your callsign and COM port, and creates
@@ -117,6 +123,19 @@ The card shows where it went, and **🔧 Fix VARA audio** moves it back without 
 The **Ham links** card opens popular sites in a new tab. QRZ, aprs.fi and PSKReporter open straight to your own
 callsign. Edit the list in `HAM_LINKS` near the end of `app/index.html`.
 
+## Net log add-on (optional)
+The installer asks whether to add the **Net log**, a logger for running net control, opened from the
+**📋 Net log** button in the panel:
+- Type a callsign and press Enter. Each check-in is stamped in UTC, with the name, city and distance from the FCC
+  database, and the radio's frequency is filled in for you.
+- Mark **Traffic**, **Short time**, **Mobile**, **✓ acknowledged** and notes on each check-in.
+- Export to **PDF** or **Word** with your club's letterhead (built from its name, tagline and logo, or your own
+  uploaded letterhead image), to **CSV**, or **Copy summary** for posting.
+
+Logs are saved as you go in `netlogs/` in RigPanel's settings folder. Choose without being asked with
+`./install.sh --netlog` / `--no-netlog` (Windows: `-NetLog` / `-NoNetLog`).
+The same logger is also available as a stand-alone app with no radio needed: see [netlog/README.md](netlog/README.md).
+
 ## Sharing the radio with other programs (Hamlib)
 RigPanel also runs a Hamlib `rigctld`-compatible server on `localhost:4532`. Point other programs
 at it instead of the radio's COM port, and they control the radio *through* RigPanel, so nothing fights
@@ -150,6 +169,7 @@ open. Then set up VARA FM once:
 | `app/rigpanel.py` | A small Python web server (standard library only) on `localhost`: the panel's API, the Hamlib server, PC mic keying, station status. |
 | `app/radios.py` | The radio drivers: Yaesu CAT and Icom CI-V over the USB serial port (termios on Linux, pyserial on Windows), and Hamlib through `rigctld`. |
 | `app/index.html` | The whole user interface. One page of HTML, CSS and JavaScript with no frameworks. It polls the server once a second. |
+| `app/netlogcore.py`, `app/netexport.py`, `app/index-net.html` | The Net log add-on: log storage and API, PDF/Word export with letterhead, and its page. `app/netlog.py` runs the same thing as the stand-alone Net Log app. |
 | `app/menus.json` | The FT-991A MENU table (001-153), built from Yaesu's CAT Operation Reference Manual, with known misprints corrected. |
 | `install.sh` / `windows\*.ps1` | Per-user installers: copy files, write settings, create the menu entry and auto-start. |
 

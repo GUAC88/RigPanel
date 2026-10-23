@@ -6,9 +6,10 @@
 # Usage: ./install.sh                 interactive setup
 #        ./install.sh --reconfigure   re-run the setup questions on an existing install
 #        ./install.sh --callsign N0CALL --grid EM25fs --port /dev/ttyUSB0 --yes   unattended
+#        add --netlog or --no-netlog to choose the Net log add-on without being asked
 set -euo pipefail
 
-VERSION="1.3.0"
+VERSION="1.4.0"
 SRC="$(cd "$(dirname "$0")" && pwd)/app"
 APP_DIR="$HOME/.local/share/rigpanel"
 CFG_DIR="$HOME/.config/rigpanel"
@@ -18,7 +19,8 @@ UNIT_DIR="$HOME/.config/systemd/user"
 DESKTOP_DIR="$HOME/.local/share/applications"
 ICON_DIR="$HOME/.local/share/icons/hicolor/scalable/apps"
 
-CALL="" GRID="" PORT="" BAUD="38400" HTTP_PORT="8073" WL_FREQ="145.030" YES=0 RECONF=0
+CALL="" GRID="" PORT="" BAUD="38400" HTTP_PORT="8073" WL_FREQ="145.030" YES=0 RECONF=0 NETLOG=""
+NETLOG_FILES="index-net.html netlogcore.py netexport.py"
 
 bold() { printf '\033[1m%s\033[0m\n' "$*"; }
 info() { printf '  \033[32m✓\033[0m %s\n' "$*"; }
@@ -41,7 +43,9 @@ while [ $# -gt 0 ]; do
     --winlink-freq) WL_FREQ="$2"; shift 2 ;;
     --yes|-y) YES=1; shift ;;
     --reconfigure) RECONF=1; shift ;;
-    -h|--help) sed -n '2,9p' "$0"; exit 0 ;;
+    --netlog) NETLOG=y; shift ;;
+    --no-netlog) NETLOG=n; shift ;;
+    -h|--help) sed -n '2,10p' "$0"; exit 0 ;;
     *) die "Unknown option: $1 (try --help)" ;;
   esac
 done
@@ -131,6 +135,15 @@ PY
 fi
 HTTP_PORT=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1])).get("http_port", 8073))' "$CFG")
 
+# --- Optional add-on: Net log --------------------------------------------------------
+if [ -z "$NETLOG" ]; then
+  echo; bold "Add-ons"
+  echo "  Net log: log check-ins when you run a net (FCC name/location lookup, traffic and short-time flags),"
+  echo "  then export to PDF or Word with your club's letterhead, or CSV. Opens from a button in the panel."
+  DEF=y; [ -d "$APP_DIR" ] && [ ! -f "$APP_DIR/netlogcore.py" ] && DEF=n   # keep what an earlier install chose
+  ask "Install the Net log add-on? (y/n)" "$DEF"; [[ "$REPLY" =~ ^[Yy] ]] && NETLOG=y || NETLOG=n
+fi
+
 # --- Install files --------------------------------------------------------------
 echo; bold "Installing"
 mkdir -p "$APP_DIR" "$BIN_DIR" "$DESKTOP_DIR" "$ICON_DIR"
@@ -139,6 +152,13 @@ install -m 755 "$SRC"/rigpanel.py "$APP_DIR"/
 install -m 644 "$SRC"/rigpanel.svg "$ICON_DIR"/rigpanel.svg
 echo "$VERSION" > "$APP_DIR/VERSION"
 info "App files -> $APP_DIR"
+if [ "$NETLOG" = y ]; then
+  for f in $NETLOG_FILES; do install -m 644 "$SRC/$f" "$APP_DIR"/; done
+  info "Net log add-on installed (📋 Net log button in the panel; logs kept in $CFG_DIR/netlogs)"
+else
+  for f in $NETLOG_FILES; do rm -f "$APP_DIR/$f"; done
+  info "Net log add-on not installed (your saved net logs, if any, are kept)"
+fi
 
 cat > "$BIN_DIR/rigpanel" <<EOF
 #!/bin/sh

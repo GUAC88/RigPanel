@@ -375,6 +375,7 @@
     <div class="swatches" role="group" aria-label="Colour theme" id="swatches"></div>
     <button id="mode-toggle" title="Light / dark" aria-label="Switch light or dark">◐</button>
     <button id="open-bg" title="Background" aria-label="Background">🖼</button>
+    <button id="open-net" title="Net logging (opens in its own tab)" hidden>📋 <span class="lbl">Net log</span></button>
     <button id="open-radio" title="Choose and connect your radio">📻 <span class="lbl">Radio setup</span></button>
     <button id="open-settings" title="The radio's menu settings" hidden>⚙ <span class="lbl">Radio menus</span></button>
   </div>
@@ -642,6 +643,7 @@ function loadConfig() {
     document.querySelector(".display").dataset.call = c.callsign;
     $("ver").textContent = "v" + c.version;
     applyCaps(); renderLinks();
+    $("open-net").hidden = !(c.trials || []).includes("net");
   });
 }
 
@@ -1132,6 +1134,8 @@ $("st-fix").onclick = async () => {
   showStation(r.status); if (!r.status) loadStation();
 };
 loadStation(); setInterval(() => { if (!document.hidden) loadStation(); }, 5000);
+
+$("open-net").onclick = () => window.open("/net", "rigpanel-net");
 
 // --- Ham links ({call} is replaced with your callsign) ---
 const HAM_LINKS = [

@@ -1,0 +1,538 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Net log</title>
+<link rel="icon" href="/icon.svg" type="image/svg+xml">
+<script>
+  // Theme before first paint: accent colour and light/dark choice are remembered per browser
+  try {
+    document.documentElement.dataset.accent = localStorage.getItem("rp-accent") || "signal";
+    const m = localStorage.getItem("rp-mode"); if (m === "light" || m === "dark") document.documentElement.dataset.mode = m;
+  } catch {}
+</script>
+<style>
+  /* ---- Design tokens ------------------------------------------------------------------- */
+  :root {
+    --bg: #eef1f6; --panel: #ffffff; --panel-2: #f6f8fb; --ink: #141a26; --muted: #5d6779; --line: #dce2ec;
+    --tx: #e5372b; --ok: #12a150; --warn: #d98a00;
+    --display-bg: #0b111b; --display-line: #1d2b3d; --display-sub: #8fa6bd;
+    --shadow: 0 1px 2px rgba(16, 24, 40, .06), 0 4px 14px rgba(16, 24, 40, .06);
+    --radius: 14px;
+    /* section colours */
+    --c-quick: #f59e0b; --c-presets: #ec4899; --c-freq: #06b6d4; --c-mode: #8b5cf6;
+    --c-rptr: #10b981; --c-levels: #3b82f6; --c-mic: #ef4444;
+    /* mode families */
+    --m-voice: #3b82f6; --m-data: #8b5cf6; --m-cw: #f59e0b; --m-dig: #14b8a6;
+  }
+  :root[data-accent="signal"] { --brand: #ff7a1a; --brand-2: #ffb547; --lcd: #ffc163; --lcd-glow: rgba(255, 166, 64, .45); }
+  :root[data-accent="ocean"]  { --brand: #1f8fff; --brand-2: #22d3ee; --lcd: #7fe3ff; --lcd-glow: rgba(64, 196, 255, .45); }
+  :root[data-accent="aurora"] { --brand: #10b981; --brand-2: #84cc16; --lcd: #7ee2a8; --lcd-glow: rgba(126, 226, 168, .45); }
+  :root[data-accent="violet"] { --brand: #8b5cf6; --brand-2: #ec4899; --lcd: #d4c2ff; --lcd-glow: rgba(180, 150, 255, .45); }
+  :root { --brand-ink: #ffffff; }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-mode="light"]) {
+      --bg: #0c1018; --panel: #141a25; --panel-2: #1a2130; --ink: #e8ecf3; --muted: #97a3b6; --line: #263042;
+      --tx: #ff5a4f; --ok: #3ad07a; --warn: #ffb020; --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 6px 20px rgba(0, 0, 0, .25);
+    }
+  }
+  :root[data-mode="dark"] {
+    --bg: #0c1018; --panel: #141a25; --panel-2: #1a2130; --ink: #e8ecf3; --muted: #97a3b6; --line: #263042;
+    --tx: #ff5a4f; --ok: #3ad07a; --warn: #ffb020; --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 6px 20px rgba(0, 0, 0, .25);
+  }
+
+
+  /* ---- Net log ----------------------------------------------------------------------- */
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  body::before { content: ""; position: fixed; inset: 0 0 auto 0; height: 200px; pointer-events: none; z-index: -1;
+                 background: radial-gradient(60% 100% at 10% 0%, color-mix(in srgb, var(--brand) 16%, transparent), transparent 70%); }
+  button, input, select, textarea { font: inherit; color: inherit; }
+  button { border: 1px solid var(--line); background: var(--panel); border-radius: 10px; padding: 6px 12px; min-height: 36px; cursor: pointer; }
+  button:hover { border-color: var(--brand); }
+  button.primary { background: var(--brand); border-color: var(--brand); color: var(--brand-ink); font-weight: 600; }
+  button.danger { color: var(--tx); }
+  button:disabled { opacity: .45; cursor: not-allowed; }
+  input[type=text], input:not([type]), textarea { border: 1px solid var(--line); background: var(--panel-2); border-radius: 10px; padding: 7px 10px; min-width: 0; }
+  input:focus, textarea:focus { outline: 2px solid color-mix(in srgb, var(--brand) 60%, transparent); outline-offset: 0; border-color: var(--brand); }
+  .wrap { max-width: 1500px; margin: 0 auto; padding: 14px 16px 24px; display: grid; gap: 14px;
+          grid-template-columns: minmax(0, 1fr) 300px; align-items: start; }
+  header { grid-column: 1 / -1; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; padding: 8px 12px;
+           background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); }
+  header h1 { margin: 0; font-size: 18px; } header .sp { flex: 1; }
+  header a { color: var(--muted); text-decoration: none; font-size: 14px; } header a:hover { color: var(--brand); }
+  .chip { font: 600 13px ui-monospace, monospace; padding: 4px 10px; border-radius: 999px; background: var(--panel-2); border: 1px solid var(--line); }
+  section { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px; box-shadow: var(--shadow); min-width: 0; }
+  h2 { margin: 0 0 10px; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); display: flex; align-items: center; gap: 8px; }
+  .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .grow { flex: 1 1 160px; }
+  label.f { display: grid; gap: 3px; font-size: 12px; color: var(--muted); }
+  /* net header */
+  .net-h { display: grid; grid-template-columns: 2fr 1fr 1fr auto; gap: 10px; align-items: end; }
+  .state { font: 700 14px ui-monospace, monospace; padding: 8px 12px; border-radius: 10px; background: var(--panel-2); white-space: nowrap; }
+  .state.live { background: color-mix(in srgb, var(--ok) 18%, var(--panel)); color: var(--ok); }
+  .state.ended { color: var(--muted); }
+  /* check-in bar */
+  .checkin { display: grid; grid-template-columns: minmax(160px, 260px) auto auto 1fr; gap: 10px; align-items: center; margin-top: 12px; }
+  #ci-call { font: 700 22px ui-monospace, monospace; text-transform: uppercase; letter-spacing: .04em; padding: 8px 12px; }
+  .flags { display: flex; gap: 6px; }
+  .flag { display: inline-flex; align-items: center; gap: 4px; padding: 4px 9px; border: 1px solid var(--line); border-radius: 999px;
+          font-size: 13px; cursor: pointer; user-select: none; background: var(--panel-2); }
+  .flag input { margin: 0; }
+  .flag:has(input:checked) { border-color: var(--brand); background: color-mix(in srgb, var(--brand) 15%, var(--panel)); }
+  .ci-msg { font-size: 13px; color: var(--muted); }
+  .ci-msg.bad { color: var(--tx); }
+  /* table */
+  .tablewrap { overflow: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th { text-align: left; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); font-weight: 700;
+       padding: 6px 8px; border-bottom: 1px solid var(--line); position: sticky; top: 0; background: var(--panel); }
+  td { padding: 6px 8px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+  tr.flash td { animation: flash 1.2s; }
+  @keyframes flash { 0%, 40% { background: color-mix(in srgb, var(--brand) 30%, transparent); } }
+  tr.acked td { opacity: .62; } tr.acked td.c-ack, tr.acked td.c-x { opacity: 1; }
+  td.num { color: var(--muted); font-variant-numeric: tabular-nums; width: 34px; }
+  td.time { font: 13px ui-monospace, monospace; color: var(--muted); white-space: nowrap; }
+  td.call { font: 700 16px ui-monospace, monospace; white-space: nowrap; }
+  td.call a { color: inherit; text-decoration: none; } td.call a:hover { color: var(--brand); }
+  td .sub { display: block; font: 12px system-ui, sans-serif; color: var(--muted); }
+  td .tags { display: flex; gap: 4px; }
+  .tag { font-size: 11px; font-weight: 700; padding: 2px 7px; border-radius: 999px; border: 1px solid var(--line); cursor: pointer;
+         color: var(--muted); background: transparent; min-height: 0; }
+  .tag.on { color: #fff; border-color: transparent; }
+  .tag.on[data-k="traffic"] { background: var(--tx); } .tag.on[data-k="short"] { background: var(--warn); } .tag.on[data-k="mobile"] { background: var(--c-levels); }
+  .ack { width: 30px; height: 30px; min-height: 0; padding: 0; border-radius: 50%; font-size: 15px; }
+  .ack.on { background: var(--ok); border-color: var(--ok); color: #fff; }
+  td.notes input { width: 100%; padding: 4px 8px; font-size: 13px; background: transparent; border-color: transparent; }
+  td.notes input:hover, td.notes input:focus { border-color: var(--line); background: var(--panel-2); }
+  .del { min-height: 0; padding: 2px 8px; border: 0; background: transparent; color: var(--muted); }
+  .del:hover { color: var(--tx); }
+  .empty { color: var(--muted); font-size: 14px; padding: 18px 4px; text-align: center; }
+  .totals { display: flex; gap: 16px; flex-wrap: wrap; font-size: 13px; color: var(--muted); margin-top: 10px; }
+  .totals b { color: var(--ink); }
+  /* side */
+  aside { display: grid; gap: 14px; position: sticky; top: 14px; }
+  .past { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; max-height: 50vh; overflow: auto; }
+  .past li { display: grid; grid-template-columns: 1fr auto; gap: 2px 8px; padding: 8px 10px; border: 1px solid var(--line);
+             border-radius: 10px; background: var(--panel-2); cursor: pointer; }
+  .past li:hover { border-color: var(--brand); } .past li.cur { border-color: var(--brand); }
+  .past b { font-size: 14px; } .past span { font-size: 12px; color: var(--muted); grid-column: 1; }
+  .past button { grid-row: 1 / span 2; grid-column: 2; align-self: center; }
+  .tools { display: grid; gap: 8px; }
+  .tools button { width: 100%; text-align: left; }
+  .exports { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; }
+  .exports button { text-align: center; padding: 6px 4px; }
+  dialog { border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel); color: var(--ink);
+           padding: 18px; width: min(520px, 94vw); box-shadow: var(--shadow); }
+  dialog::backdrop { background: rgba(0, 0, 0, .45); }
+  dialog h3 { margin: 0 0 12px; font-size: 17px; }
+  dialog form { display: grid; gap: 10px; }
+  dialog input:not([type=color]):not([type=file]) { width: 100%; }
+  .lh-logo { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+  .lh-logo img { width: 64px; height: 64px; object-fit: contain; border: 1px solid var(--line); border-radius: 8px; background: #fff; }
+  .lh-logo .none { width: 64px; height: 64px; border: 1px dashed var(--line); border-radius: 8px; display: grid; place-items: center;
+                   font-size: 11px; color: var(--muted); }
+  .seg { display: inline-grid; grid-auto-flow: column; gap: 4px; padding: 3px; border: 1px solid var(--line); border-radius: 999px; background: var(--panel-2); }
+  .seg label { padding: 4px 12px; border-radius: 999px; cursor: pointer; font-size: 13px; }
+  .seg input { position: absolute; opacity: 0; pointer-events: none; }
+  .seg label:has(input:checked) { background: var(--brand); color: var(--brand-ink); }
+  .lh-banner img { display: block; max-width: 100%; max-height: 110px; border: 1px solid var(--line); border-radius: 8px; background: #fff; }
+  .lh-banner .none { height: 60px; border: 1px dashed var(--line); border-radius: 8px; display: grid; place-items: center; font-size: 12px; color: var(--muted); }
+  .lh-hint { font-size: 12px; color: var(--muted); margin: 0; }
+  .dlg-btns { display: flex; justify-content: flex-end; gap: 8px; margin-top: 6px; }
+  .toast { position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%); background: var(--ink); color: var(--bg);
+           padding: 8px 16px; border-radius: 999px; font-size: 14px; opacity: 0; transition: opacity .2s; pointer-events: none; }
+  .toast.show { opacity: .95; }
+  @media (max-width: 1000px) { .wrap { grid-template-columns: 1fr; } aside { position: static; } }
+  @media (max-width: 700px) {
+    .net-h { grid-template-columns: 1fr 1fr; } .net-h .grow2 { grid-column: 1 / -1; }
+    .checkin { grid-template-columns: 1fr auto; } .flags, .ci-msg { grid-column: 1 / -1; }
+    th.c-loc, td.c-loc, th.c-notes, td.notes { display: none; }
+  }
+  @media print {
+    body::before, header a, aside, .checkin, .del, button.ack:not(.on), td.notes input { display: none !important; }
+    .wrap { grid-template-columns: 1fr; padding: 0; } section, header { box-shadow: none; border: 0; }
+    :root { --bg: #fff; --panel: #fff; --panel-2: #fff; --ink: #000; --muted: #444; --line: #bbb; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>📋 Net log</h1>
+  <span class="chip" id="radio-chip" title="What the radio is on now">radio: —</span>
+  <span class="chip" id="utc" title="UTC">--:--:-- UTC</span>
+  <span class="sp"></span>
+  <a href="/" target="rigpanel" id="to-rigpanel">← RigPanel</a>
+</header>
+
+<main style="display:grid; gap:14px; min-width:0">
+  <section>
+    <h2>Net</h2>
+    <div class="net-h">
+      <label class="f grow2">Net name <input id="net-name" list="net-names" placeholder="e.g. Tulsa ARES weekly net" autocomplete="off"></label>
+      <label class="f">Net control <input id="net-ncs" autocomplete="off" style="text-transform:uppercase"></label>
+      <label class="f">Frequency <input id="net-freq" placeholder="from the radio" autocomplete="off"></label>
+      <div class="row" style="flex-wrap:nowrap">
+        <span class="state" id="net-state">Not started</span>
+        <button id="net-start" class="primary">▶ Start net</button>
+        <button id="net-end" hidden>■ End net</button>
+      </div>
+    </div>
+    <datalist id="net-names"></datalist>
+    <form class="checkin" id="ci-form" autocomplete="off">
+      <input id="ci-call" placeholder="CALLSIGN" aria-label="Callsign checking in" spellcheck="false">
+      <button class="primary" type="submit">＋ Check in</button>
+      <div class="flags">
+        <label class="flag" title="Has traffic to pass"><input type="checkbox" id="ci-traffic"> Traffic</label>
+        <label class="flag" title="Short time: wants to leave early"><input type="checkbox" id="ci-short"> Short time</label>
+        <label class="flag" title="Mobile or portable"><input type="checkbox" id="ci-mobile"> Mobile</label>
+      </div>
+      <span class="ci-msg" id="ci-msg">Type a call and press Enter. Name and location fill in from the FCC database.</span>
+    </form>
+  </section>
+
+  <section>
+    <h2>Check-ins</h2>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>#</th><th>UTC</th><th>Call</th><th class="c-loc">Name / location</th><th>Flags</th><th title="Acknowledged / called on">✓</th><th class="c-notes">Notes</th><th></th></tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+      <div class="empty" id="empty">No check-ins yet.</div>
+    </div>
+    <div class="totals" id="totals"></div>
+  </section>
+</main>
+
+<aside>
+  <section>
+    <h2>This log</h2>
+    <div class="tools">
+      <button id="new-net">🆕 New net</button>
+      <button id="copy-sum">📋 Copy summary</button>
+      <div class="exports" role="group" aria-label="Export">
+        <button id="export-pdf" title="PDF with your letterhead">⬇ PDF</button>
+        <button id="export-docx" title="Word document with your letterhead">⬇ Word</button>
+        <button id="export-csv" title="Spreadsheet (CSV)">⬇ CSV</button>
+      </div>
+      <button id="open-lh">🏷 Letterhead…</button>
+      <button id="print">🖨 Print</button>
+      <button id="del-net" class="danger">🗑 Delete this log</button>
+    </div>
+  </section>
+  <section>
+    <h2>Past nets</h2>
+    <ul class="past" id="past"><li class="empty" style="cursor:default">None yet.</li></ul>
+  </section>
+</aside>
+</div>
+<dialog id="lh-dlg" aria-labelledby="lh-title">
+  <form id="lh-form" method="dialog">
+    <h3 id="lh-title">🏷 Letterhead for PDF and Word exports</h3>
+    <div class="seg" role="radiogroup" aria-label="Letterhead style">
+      <label><input type="radio" name="lh-style" value="built" checked> Built-in</label>
+      <label><input type="radio" name="lh-style" value="image"> My own image</label>
+    </div>
+    <div id="lh-built" style="display:grid; gap:10px">
+    <label class="f">Organization or club name <input id="lh-org" maxlength="120" placeholder="e.g. Tulsa Amateur Radio Club"></label>
+    <label class="f">Tagline <input id="lh-tag" maxlength="160" placeholder="e.g. Tulsa County ARES · Net Control"></label>
+    <label class="f">Contact line <input id="lh-contact" maxlength="160" placeholder="e.g. KJ5JDO · email · website"></label>
+    <label class="f" style="grid-auto-flow:column; justify-content:start; align-items:center; gap:10px">Accent colour
+      <input type="color" id="lh-accent" value="#1f4e79"></label>
+    <div class="f">Logo (optional; PNG or JPEG, shown at the left of the letterhead)
+      <div class="lh-logo">
+        <img id="lh-logo-img" alt="Current logo" hidden><span class="none" id="lh-logo-none">no logo</span>
+        <input type="file" id="lh-file" accept="image/png,image/jpeg,image/webp,image/gif">
+        <button type="button" id="lh-rmlogo" hidden>Remove logo</button>
+      </div>
+    </div>
+    </div>
+    <div id="lh-image" class="f lh-banner" hidden style="display:grid; gap:8px">
+      Your letterhead artwork
+      <img id="lh-banner-img" alt="Current letterhead" hidden><span class="none" id="lh-banner-none">no letterhead image yet</span>
+      <input type="file" id="lh-bfile" accept="image/png,image/jpeg,image/webp,image/gif">
+      <p class="lh-hint">A wide image of your letterhead (logo, name, address), e.g. exported from Word, Canva or your club's
+        artwork as PNG or JPEG. It goes across the top of the first page, up to 2 inches tall. Transparent areas become white.</p>
+      <button type="button" id="lh-rmbanner" hidden style="justify-self:start">Remove letterhead image</button>
+    </div>
+    <div class="dlg-btns"><button type="button" id="lh-cancel">Cancel</button><button type="submit" class="primary" id="lh-save">Save</button></div>
+  </form>
+</dialog>
+<div class="toast" id="toast"></div>
+
+<script>
+const $ = id => document.getElementById(id);
+const esc = t => String(t ?? "").replace(/[&<>"]/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"}[c]));
+const post = (path, body) => fetch(path, {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(body)}).then(r => r.json());
+const pad = n => String(n).padStart(2, "0");
+const utcHM = iso => { const d = new Date(iso); return `${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}`; };
+const idFor = d => `${d.getUTCFullYear()}${pad(d.getUTCMonth() + 1)}${pad(d.getUTCDate())}-${pad(d.getUTCHours())}${pad(d.getUTCMinutes())}${pad(d.getUTCSeconds())}`;
+const title = s => String(s || "").toLowerCase().replace(/\b([a-z])/g, m => m.toUpperCase());
+const CALL = /^([A-Z0-9]{1,3}\/)?[A-Z0-9]{1,3}[0-9][A-Z0-9]{0,4}(\/[A-Z0-9]{1,4})?$/;
+function toast(t) { const e = $("toast"); e.textContent = t; e.classList.add("show"); clearTimeout(toast.t); toast.t = setTimeout(() => e.classList.remove("show"), 2200); }
+
+let conf = {}, st = {}, log = null, saveTimer = null;
+const blank = () => ({id: null, name: $("net-name").value.trim(), ncs: (conf.callsign || "").toUpperCase(), freq: "", mode: "",
+                      start: null, end: null, entries: []});
+
+// ---- radio + clock (no radio in the stand-alone Net Log app) ----------------------------------
+const mhz = hz => (hz / 1e6).toFixed(3);
+async function poll() {
+  if (conf.standalone) return;
+  try { st = await (await fetch("/api/status")).json(); } catch { st = {}; }
+  $("radio-chip").textContent = st.ok ? `radio: ${mhz(st.freq)} ${st.mode}` : "radio: not connected";
+}
+setInterval(() => { const d = new Date(); $("utc").textContent = `${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}:${pad(d.getUTCSeconds())} UTC`; tick(); }, 1000);
+setInterval(poll, 3000);
+
+// ---- saving ---------------------------------------------------------------------------------
+function save(now) {
+  if (!log || !log.id) return Promise.resolve();
+  clearTimeout(saveTimer);
+  const go = () => post("/api/netlog", {log}).then(r => { if (!r.ok) toast("Couldn't save: " + (r.message || "error")); else loadPast(); })
+                                             .catch(() => toast("Couldn't save: RigPanel isn't running"));
+  if (now) return go(); saveTimer = setTimeout(go, 400);
+}
+window.addEventListener("beforeunload", () => { if (log && log.id) navigator.sendBeacon("/api/netlog", new Blob([JSON.stringify({log})], {type: "application/json"})); });
+
+// ---- net header -----------------------------------------------------------------------------
+function tick() {
+  const s = $("net-state");
+  if (!log || !log.start) { s.textContent = "Not started"; s.className = "state"; return; }
+  const end = log.end ? new Date(log.end) : new Date(), secs = Math.max(0, Math.round((end - new Date(log.start)) / 1000));
+  const t = `${Math.floor(secs / 3600)}:${pad(Math.floor(secs / 60) % 60)}:${pad(secs % 60)}`;
+  s.textContent = log.end ? `Ended · ${t}` : `● On air ${t}`; s.className = "state " + (log.end ? "ended" : "live");
+}
+function showHeader() {
+  $("net-name").value = log.name || ""; $("net-ncs").value = log.ncs || ""; $("net-freq").value = log.freq || "";
+  $("net-start").hidden = !!log.start && !log.end ? true : false;
+  $("net-start").textContent = log.end ? "▶ Reopen net" : "▶ Start net";
+  $("net-end").hidden = !log.start || !!log.end;
+  tick();
+}
+for (const [id, key] of [["net-name", "name"], ["net-ncs", "ncs"], ["net-freq", "freq"]])
+  $(id).addEventListener("input", e => { log[key] = key === "ncs" ? e.target.value.toUpperCase() : e.target.value; save(); });
+$("net-start").onclick = () => {
+  if (!log.start) {
+    const now = new Date();
+    log.id = idFor(now); log.start = now.toISOString();
+    if (!log.freq && st.ok) { log.freq = `${mhz(st.freq)} MHz ${st.mode}`; }
+    if (!log.ncs) log.ncs = (conf.callsign || "").toUpperCase();
+    log.name = $("net-name").value.trim();
+  } else log.end = null;   // reopen an ended net
+  showHeader(); save(true); $("ci-call").focus();
+};
+$("net-end").onclick = () => { log.end = new Date().toISOString(); showHeader(); save(true); toast("Net ended and saved."); };
+
+// ---- check-ins ------------------------------------------------------------------------------
+$("ci-form").onsubmit = e => {
+  e.preventDefault();
+  const call = $("ci-call").value.trim().toUpperCase().replace(/\s+/g, "");
+  const msg = $("ci-msg");
+  if (!call) return;
+  if (!CALL.test(call)) { msg.textContent = `"${call}" doesn't look like a callsign.`; msg.className = "ci-msg bad"; return; }
+  if (!log.start) $("net-start").onclick();   // first check-in starts the net
+  const dup = log.entries.findIndex(x => x.call === call);
+  if (dup >= 0) {
+    msg.textContent = `${call} already checked in (#${dup + 1}).`; msg.className = "ci-msg bad";
+    const tr = $("rows").children[dup]; tr.classList.remove("flash"); void tr.offsetWidth; tr.classList.add("flash");
+    tr.scrollIntoView({block: "nearest"}); $("ci-call").select(); return;
+  }
+  const ent = {t: new Date().toISOString(), call, name: "", loc: "", grid: "", traffic: $("ci-traffic").checked,
+               short: $("ci-short").checked, mobile: $("ci-mobile").checked || /\/(M|MM|P|AM)$/.test(call), ack: false, notes: ""};
+  log.entries.push(ent);
+  for (const id of ["ci-traffic", "ci-short", "ci-mobile"]) $(id).checked = false;
+  $("ci-call").value = ""; msg.textContent = `${call} checked in.`; msg.className = "ci-msg";
+  render(); save(); lookup(ent);
+};
+async function lookup(ent) {
+  const base = ent.call.split("/").sort((a, b) => b.length - a.length)[0];   // W5ABC/M -> W5ABC
+  try {
+    const r = await (await fetch(`/api/lookup?quiet=1&call=${encodeURIComponent(base)}`)).json();
+    if (r.status === "VALID") {
+      ent.name = r.type === "CLUB" ? r.name : title(r.name); ent.loc = title(r.cityState).replace(/, (\w\w)$/i, (m, s) => ", " + s.toUpperCase());
+      ent.grid = r.grid || ""; if (r.miles != null) ent.miles = Math.round(r.miles);
+    } else ent.loc = r.status === "OFFLINE" ? "(lookup offline)" : "(not in FCC database)";
+  } catch { ent.loc = "(lookup failed)"; }
+  render(); save();
+}
+function render() {
+  const rows = log.entries.map((x, i) => `<tr class="${x.ack ? "acked" : ""}" data-i="${i}">
+    <td class="num">${i + 1}</td><td class="time">${utcHM(x.t)}</td>
+    <td class="call"><a href="https://www.qrz.com/db/${encodeURIComponent(x.call)}" target="_blank" rel="noopener">${esc(x.call)}</a></td>
+    <td class="c-loc">${esc(x.name || "…")}<span class="sub">${esc(x.loc)}${x.miles != null ? ` · ${x.miles} mi` : ""}</span></td>
+    <td><div class="tags">${[["traffic", "T", "Traffic"], ["short", "S", "Short time"], ["mobile", "M", "Mobile"]].map(([k, l, t]) =>
+      `<button class="tag${x[k] ? " on" : ""}" data-k="${k}" title="${t}">${l}</button>`).join("")}</div></td>
+    <td class="c-ack"><button class="ack${x.ack ? " on" : ""}" title="Acknowledged / called on">✓</button></td>
+    <td class="notes"><input value="${esc(x.notes)}" placeholder="notes" aria-label="Notes for ${esc(x.call)}"></td>
+    <td class="c-x"><button class="del" title="Remove this check-in">✕</button></td></tr>`).join("");
+  $("rows").innerHTML = rows; $("empty").hidden = log.entries.length > 0;
+  const n = log.entries.length, tr = log.entries.filter(x => x.traffic).length, ack = log.entries.filter(x => x.ack).length;
+  $("totals").innerHTML = n ? `<span><b>${n}</b> check-in${n === 1 ? "" : "s"}</span><span><b>${tr}</b> with traffic</span>` +
+    `<span><b>${ack}</b> of ${n} acknowledged</span><span><b>${log.entries.filter(x => x.short).length}</b> short time</span>` : "";
+}
+$("rows").addEventListener("click", e => {
+  const tr = e.target.closest("tr"); if (!tr) return;
+  const x = log.entries[+tr.dataset.i];
+  if (e.target.closest(".tag")) { const k = e.target.closest(".tag").dataset.k; x[k] = !x[k]; }
+  else if (e.target.closest(".ack")) x.ack = !x.ack;
+  else if (e.target.closest(".del")) { if (!confirmDel(x)) return; log.entries.splice(+tr.dataset.i, 1); }
+  else return;
+  render(); save();
+});
+function confirmDel(x) {   // a second click within 3 s confirms (no browser dialogs)
+  if (confirmDel.call === x.call && Date.now() - confirmDel.t < 3000) { confirmDel.call = null; return true; }
+  confirmDel.call = x.call; confirmDel.t = Date.now(); toast(`Click ✕ again to remove ${x.call}`); return false;
+}
+$("rows").addEventListener("input", e => {
+  if (!e.target.matches("td.notes input")) return;
+  log.entries[+e.target.closest("tr").dataset.i].notes = e.target.value; save();
+});
+
+// ---- tools ----------------------------------------------------------------------------------
+function summary() {
+  const d = log.start ? new Date(log.start) : new Date();
+  const day = `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}`;
+  const when = log.start ? `${utcHM(log.start)}${log.end ? "–" + utcHM(log.end) : ""} UTC` : "";
+  const calls = log.entries.map(x => x.call + (x.traffic ? " (traffic)" : "")).join(", ");
+  return `${log.name || "Net"} — ${day} ${when}\nNCS: ${log.ncs || "—"}${log.freq ? " · " + log.freq : ""}\n` +
+         `${log.entries.length} check-ins, ${log.entries.filter(x => x.traffic).length} with traffic:\n${calls}`;
+}
+$("copy-sum").onclick = async () => {
+  try { await navigator.clipboard.writeText(summary()); toast("Summary copied."); }
+  catch { toast("The browser blocked the clipboard."); }
+};
+$("export-csv").onclick = () => {
+  const q = v => `"${String(v ?? "").replace(/"/g, '""')}"`;
+  const head = ["#", "time_utc", "call", "name", "location", "grid", "miles", "traffic", "short_time", "mobile", "acknowledged", "notes"];
+  const lines = [head.join(",")].concat(log.entries.map((x, i) => [i + 1, x.t, x.call, x.name, x.loc, x.grid, x.miles ?? "",
+    x.traffic ? "Y" : "", x.short ? "Y" : "", x.mobile ? "Y" : "", x.ack ? "Y" : "", x.notes].map(q).join(",")));
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([lines.join("\r\n") + "\r\n"], {type: "text/csv"}));
+  a.download = `${(log.name || "net").replace(/[^\w-]+/g, "_")}-${log.id || "unsaved"}.csv`; a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+};
+$("print").onclick = () => window.print();
+async function exportDoc(fmt) {
+  if (!log.id) { toast("Start the net (or log a check-in) first."); return; }
+  await save(true);   // export what's on screen
+  const a = document.createElement("a");
+  a.href = `/api/netlog-export?fmt=${fmt}&id=${encodeURIComponent(log.id)}`; a.download = ""; a.click();
+}
+$("export-pdf").onclick = () => exportDoc("pdf");
+$("export-docx").onclick = () => exportDoc("docx");
+
+// ---- letterhead ------------------------------------------------------------------------------
+let lh = {}, removeLogo = false, removeBanner = false;
+const lhStyle = () => document.querySelector('input[name="lh-style"]:checked').value;
+function showStyle() { const img = lhStyle() === "image"; $("lh-built").hidden = img; $("lh-image").hidden = !img; }
+document.querySelectorAll('input[name="lh-style"]').forEach(r => r.onchange = showStyle);
+function showBanner(has) {
+  $("lh-banner-img").hidden = !has; $("lh-banner-none").hidden = has; $("lh-rmbanner").hidden = !has;
+  if (has) $("lh-banner-img").src = "/api/letterhead-banner?t=" + Date.now();
+}
+$("lh-rmbanner").onclick = () => { removeBanner = true; $("lh-bfile").value = ""; showBanner(false); };
+$("lh-bfile").onchange = () => { removeBanner = false; const f = $("lh-bfile").files[0]; if (f) { $("lh-banner-img").src = URL.createObjectURL(f);
+  $("lh-banner-img").hidden = false; $("lh-banner-none").hidden = true; } };
+function showLogo(has) {
+  $("lh-logo-img").hidden = !has; $("lh-logo-none").hidden = has; $("lh-rmlogo").hidden = !has;
+  if (has) $("lh-logo-img").src = "/api/letterhead-logo?t=" + Date.now();
+}
+$("open-lh").onclick = async () => {
+  try { lh = await (await fetch("/api/letterhead")).json(); } catch { toast("RigPanel isn't running"); return; }
+  $("lh-org").value = lh.org || ""; $("lh-tag").value = lh.tagline || ""; $("lh-contact").value = lh.contact || "";
+  $("lh-accent").value = lh.accent || "#1f4e79"; $("lh-file").value = ""; removeLogo = false; showLogo(!!lh.has_logo);
+  $("lh-bfile").value = ""; removeBanner = false; showBanner(!!lh.has_banner);
+  document.querySelector(`input[name="lh-style"][value="${lh.style === "image" ? "image" : "built"}"]`).checked = true; showStyle();
+  $("lh-dlg").showModal(); $("lh-org").focus();
+};
+$("lh-cancel").onclick = () => $("lh-dlg").close();
+$("lh-rmlogo").onclick = () => { removeLogo = true; $("lh-file").value = ""; showLogo(false); };
+$("lh-file").onchange = () => { removeLogo = false; const f = $("lh-file").files[0]; if (f) { $("lh-logo-img").src = URL.createObjectURL(f);
+  $("lh-logo-img").hidden = false; $("lh-logo-none").hidden = true; } };
+function toJpeg(file, maxPx = 600) {   // any image -> JPEG on white, so PDF and Word can both use it
+  return new Promise((ok, bad) => {
+    const img = new Image();
+    img.onload = () => {
+      const k = Math.min(1, maxPx / Math.max(img.width, img.height)), c = document.createElement("canvas");
+      c.width = Math.max(1, Math.round(img.width * k)); c.height = Math.max(1, Math.round(img.height * k));
+      const g = c.getContext("2d"); g.fillStyle = "#fff"; g.fillRect(0, 0, c.width, c.height); g.drawImage(img, 0, 0, c.width, c.height);
+      c.toBlob(b => b ? ok(b) : bad(new Error("couldn't convert the image")), "image/jpeg", 0.9);
+    };
+    img.onerror = () => bad(new Error("that file isn't an image the browser can read"));
+    img.src = URL.createObjectURL(file);
+  });
+}
+$("lh-form").onsubmit = async e => {
+  e.preventDefault();
+  const body = {org: $("lh-org").value.trim(), tagline: $("lh-tag").value.trim(), contact: $("lh-contact").value.trim(),
+                accent: $("lh-accent").value, style: lhStyle(), remove_logo: removeLogo, remove_banner: removeBanner};
+  if (body.style === "image" && !$("lh-bfile").files[0] && (removeBanner || !lh.has_banner)) {
+    toast("Choose your letterhead image first (or switch back to Built-in)."); return;
+  }
+  try {
+    let r = await post("/api/letterhead", body);
+    if (!r.ok) throw new Error(r.message || "couldn't save");
+    const f = $("lh-file").files[0];
+    if (f) {
+      r = await (await fetch("/api/letterhead-logo", {method: "POST", headers: {"Content-Type": "image/jpeg"}, body: await toJpeg(f)})).json();
+      if (!r.ok) throw new Error(r.message || "couldn't save the logo");
+    }
+    const bf = $("lh-bfile").files[0];
+    if (bf) {
+      r = await (await fetch("/api/letterhead-banner", {method: "POST", headers: {"Content-Type": "image/jpeg"}, body: await toJpeg(bf, 2400)})).json();
+      if (!r.ok) throw new Error(r.message || "couldn't save the letterhead image");
+    }
+    $("lh-dlg").close(); toast("Letterhead saved.");
+  } catch (err) { toast("Letterhead: " + err.message); }
+};
+$("new-net").onclick = () => {
+  if (log && log.start && !log.end) { log.end = new Date().toISOString(); save(true); }
+  const keep = {name: log ? log.name : "", ncs: log ? log.ncs : ""};
+  log = blank(); Object.assign(log, keep); showHeader(); render(); loadPast(); $("net-name").focus();
+};
+$("del-net").onclick = async () => {
+  if (!log.id) { log = blank(); showHeader(); render(); return; }
+  if (!(delNet.t && Date.now() - delNet.t < 3000)) { delNet.t = Date.now(); toast("Click Delete again to remove this log for good"); return; }
+  delNet.t = 0; await post("/api/netlog/delete", {id: log.id}); toast("Log deleted."); log = blank(); showHeader(); render(); loadPast();
+};
+const delNet = {};
+
+// ---- past nets ------------------------------------------------------------------------------
+let past = [];
+async function loadPast() {
+  try { past = await (await fetch("/api/netlogs")).json(); } catch { past = []; }
+  $("net-names").innerHTML = [...new Set(past.map(p => p.name).filter(Boolean))].map(n => `<option value="${esc(n)}">`).join("");
+  $("past").innerHTML = past.length ? past.map(p => {
+    const d = p.start ? new Date(p.start) : null;
+    const when = d ? `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())} ${utcHM(p.start)} UTC` : p.id;
+    return `<li data-id="${esc(p.id)}" class="${log && log.id === p.id ? "cur" : ""}"><b>${esc(p.name || "Untitled net")}</b>` +
+           `<span>${when} · ${p.count} check-in${p.count === 1 ? "" : "s"}${p.end ? "" : " · open"}</span></li>`;
+  }).join("") : `<li class="empty" style="cursor:default">None yet.</li>`;
+}
+$("past").addEventListener("click", async e => {
+  const li = e.target.closest("li[data-id]"); if (!li) return;
+  if (log && log.start && !log.end && log.id !== li.dataset.id) { log.end = new Date().toISOString(); save(true); }
+  try { log = await (await fetch(`/api/netlog?id=${encodeURIComponent(li.dataset.id)}`)).json(); } catch { return; }
+  log.entries = log.entries || []; showHeader(); render(); loadPast();
+});
+
+// ---- start: resume a net still running, else a fresh one ------------------------------------
+(async () => {
+  try { conf = await (await fetch("/api/config")).json(); } catch {}
+  if (conf.standalone) {   // the stand-alone Net Log app: no radio to read, nothing to go back to
+    $("radio-chip").hidden = true; $("to-rigpanel").hidden = true; document.title = "Net Log";
+    $("net-freq").placeholder = "e.g. 145.170 MHz FM";
+  }
+  await Promise.all([poll(), loadPast()]);
+  const open = past.find(p => !p.end);
+  if (open) { try { log = await (await fetch(`/api/netlog?id=${encodeURIComponent(open.id)}`)).json(); log.entries = log.entries || []; toast("Resumed the open net."); } catch {} }
+  if (!log) log = blank();
+  showHeader(); render(); loadPast(); $("ci-call").focus();
+})();
+</script>
+</body>
+</html>
