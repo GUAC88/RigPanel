@@ -29,6 +29,9 @@ screen on a 1080p monitor.
 | ![Ocean theme in light mode](docs/screenshots/main-light.png) **Ocean theme, light mode** | ![Radio setup window](docs/screenshots/radio-setup.png) **Radio setup:** Yaesu, Icom or any Hamlib radio |
 | ![Grid squares background](docs/screenshots/background-grid.png) **Grid squares background**, centred on your grid square | ![Radio waves background](docs/screenshots/background-waves.png) **Radio waves background**, Violet theme |
 | ![Background picker](docs/screenshots/background-picker.png) **Background picker** | ![RigPanel on a phone](docs/screenshots/phone.png) **On a phone** |
+| ![Net log add-on during a net](docs/screenshots/netlog.png) **Net log add-on** during a net | ![Net log PDF export with a club letterhead](docs/screenshots/netlog-pdf.png) **Net log PDF export** with your letterhead |
+
+Screenshots use demo data (`docs/demo_server.py`, the fictional N0CALL and generic frequencies). Regenerate them with `docs/make-screenshots.sh`.
 
 ## Supported radios
 | Radio | How | Extras |

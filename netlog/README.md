@@ -15,6 +15,14 @@ connected, and is also available as an add-on inside [RigPanel](https://github.c
 
 Runs on **Linux** and **Windows 10/11** with Python 3.8+ and nothing else to install.
 
+![Net Log during a net: check-ins with names, flags and acknowledgements](https://raw.githubusercontent.com/GUAC88/RigPanel/main/docs/screenshots/netlog.png)
+
+| | |
+|---|---|
+| ![Letterhead settings](https://raw.githubusercontent.com/GUAC88/RigPanel/main/docs/screenshots/netlog-letterhead.png) **Letterhead:** built-in, or upload your own | ![PDF export](https://raw.githubusercontent.com/GUAC88/RigPanel/main/docs/screenshots/netlog-pdf.png) **PDF export** (Word looks the same) |
+
+*(Demo data: fictional N#CALL callsigns.)*
+
 ## Install
 ### Linux
 ```
