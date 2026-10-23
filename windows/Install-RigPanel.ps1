@@ -1,9 +1,9 @@
-# RigPanel installer for Windows 10/11 - browser control panel for the Yaesu FT-991A.
+# RigPanel installer for Windows 10/11 - browser control panel for CAT-controlled ham radios.
 # Installs for the current user only. Run via Install-RigPanel.bat (double-click).
 #   -Reconfigure   re-run the setup questions on an existing install
 param([switch]$Reconfigure)
 $ErrorActionPreference = 'Stop'
-$Version = '1.1.0'
+$Version = '1.3.0'
 
 $Src     = Join-Path (Split-Path -Parent $PSScriptRoot) 'app'
 $AppDir  = Join-Path $env:LOCALAPPDATA 'RigPanel'
@@ -21,7 +21,7 @@ function Ask($q, $def) {
 }
 function Write-Utf8NoBom($path, $text) { [IO.File]::WriteAllText($path, $text, (New-Object Text.UTF8Encoding $false)) }
 
-Write-Host "`nRigPanel $Version installer - Yaesu FT-991A control panel`n" -ForegroundColor Cyan
+Write-Host "`nRigPanel $Version installer - ham radio control panel`n" -ForegroundColor Cyan
 if (-not (Test-Path $Src)) { Fail "Can't find the app folder next to the windows folder." }
 
 # --- Python ---------------------------------------------------------------------
@@ -77,19 +77,20 @@ if ((Test-Path $Cfg) -and -not $Reconfigure) {
         if (-not $ok) { Warn 'Invalid grid square, try again' }
     } until ($ok)
 
-    # The FT-991A's USB bridge shows up as two COM ports; CAT is the "Enhanced" one
+    # Yaesu radios with a CP210x bridge show two COM ports (CAT is the "Enhanced" one); Icom radios show one
     $ports = Get-CimInstance Win32_PnPEntity -ErrorAction SilentlyContinue |
              Where-Object { $_.Name -match '\((COM\d+)\)' } | ForEach-Object { $_.Name }
-    $enh = $ports | Where-Object { $_ -match 'Enhanced' } | Select-Object -First 1
+    $enh = $ports | Where-Object { $_ -match 'Enhanced|Icom|IC-\d' } | Select-Object -First 1
     if ($ports) { Write-Host '  Serial ports found:'; $ports | ForEach-Object { Write-Host "    $_" } }
     $def = if ($enh -match '\((COM\d+)\)') { $Matches[1] } else { '' }
     if (-not $ports) {
-        Warn 'No COM ports found. Plug in the FT-991A, turn it on, and install the Silicon Labs CP210x driver if needed:'
+        Warn 'No COM ports found. Plug in the radio, turn it on, and install its USB driver if needed (Yaesu / IC-7300: Silicon Labs CP210x):'
         Warn '  https://www.silabs.com/developers/usb-to-uart-bridge-vcp-drivers'
-    } elseif ($def) { Info "Radio CAT port looks like $def (the 'Enhanced' COM port)" }
+    } elseif ($def) { Info "Radio CAT port looks like $def" }
     $Port = (Ask 'Radio CAT COM port (blank = auto-detect at startup)' $def).ToUpper()
 
-    do { $Baud = Ask 'Radio CAT baud rate (radio MENU 031)' '38400' } until ($Baud -in @('4800', '9600', '19200', '38400'))
+    $baudDef = if ($enh -match 'Icom|IC-\d') { '115200' } else { '38400' }
+    do { $Baud = Ask 'Radio CAT baud rate (Yaesu FT-991A: MENU 031, Icom: CI-V USB Baud Rate)' $baudDef } until ($Baud -in @('4800', '9600', '19200', '38400', '57600', '115200'))
     do {
         $Wl = Ask 'Your local Winlink VARA FM frequency in MHz' '145.030'
         $WlHz = 0; $ok = [double]::TryParse($Wl, [Globalization.NumberStyles]::Float, [Globalization.CultureInfo]::InvariantCulture, [ref]$WlHz)
@@ -106,6 +107,30 @@ if ((Test-Path $Cfg) -and -not $Reconfigure) {
 }
 $conf = Get-Content $Cfg -Raw | ConvertFrom-Json
 $HttpPort = if ($conf.http_port) { $conf.http_port } else { 8073 }
+
+# --- Winlink / VARA FM -------------------------------------------------------------
+# Windows lets only one program open a COM port: VARA keying the radio by CAT on RigPanel's port breaks one of them
+$ports = Get-CimInstance Win32_PnPEntity -ErrorAction SilentlyContinue |
+         Where-Object { $_.Name -match '\((COM\d+)\)' } | ForEach-Object { $_.Name }
+$catPort = "$($conf.serial_port)".ToUpper()
+if (-not $catPort -and ($ports | Where-Object { $_ -match 'Enhanced|Icom|IC-\d' } | Select-Object -First 1) -match '\((COM\d+)\)') { $catPort = $Matches[1] }
+$stdPort = if (($ports | Where-Object { $_ -match 'Standard' } | Select-Object -First 1) -match '\((COM\d+)\)') { $Matches[1] } else { '' }
+$varaIni = @('C:\VARA FM', "$env:ProgramFiles\VARA FM", "${env:ProgramFiles(x86)}\VARA FM") |
+           ForEach-Object { Join-Path $_ 'VARAFM.ini' } | Where-Object { Test-Path $_ } | Select-Object -First 1
+Write-Host "`nWinlink / VARA FM" -ForegroundColor Cyan
+if ($varaIni) {
+    $vara = @{}
+    Get-Content $varaIni -ErrorAction SilentlyContinue | Where-Object { $_ -match '^\s*(CATPort|PTTPort)\s*=\s*(\S*)' } |
+        ForEach-Object { if (-not $vara[$Matches[1]]) { $vara[$Matches[1]] = $Matches[2].ToUpper() } }
+    if ($catPort -and $vara.CATPort -eq $catPort) {
+        Warn "VARA FM is set to use $catPort for CAT, the same port as RigPanel. Windows lets only one program open it,"
+        Warn '  so either VARA can''t transmit or RigPanel loses the radio. In VARA FM: Settings > PTT, choose'
+        Warn "  $(if ($stdPort) { $stdPort } else { 'the radio''s Standard COM port' }) and RTS (or VOX)."
+    } else { Info "VARA FM found ($varaIni)" }
+}
+$pttTip = if ($stdPort) { "$stdPort (the radio's Standard port)" } else { "the radio's Standard COM port (not $(if ($catPort) { $catPort } else { 'the CAT port' }))" }
+Write-Host "  For Winlink, set VARA FM's sound card to the radio's USB Audio CODEC (input and output),"
+Write-Host "  and its PTT to $pttTip with RTS. On the FT-991A also set MENU 076 FM PKT PTT SELECT = RTS."
 
 # --- Install files --------------------------------------------------------------------
 Write-Host "`nInstalling" -ForegroundColor Cyan
@@ -143,9 +168,9 @@ function New-Shortcut($path, $target, $arguments, $desc) {
 New-Item -ItemType Directory -Force -Path $Menu | Out-Null
 $ps = "$env:SystemRoot\System32\WindowsPowerShell\v1.0\powershell.exe"
 $launchArgs = "-NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File `"$AppDir\Launch-RigPanel.ps1`""
-New-Shortcut (Join-Path $Menu "$($conf.callsign) Rig Panel.lnk") $ps $launchArgs 'Control the Yaesu FT-991A'
+New-Shortcut (Join-Path $Menu "$($conf.callsign) Rig Panel.lnk") $ps $launchArgs 'Control your ham radio'
 New-Shortcut (Join-Path $Menu 'Uninstall RigPanel.lnk') $ps "-NoProfile -ExecutionPolicy Bypass -File `"$AppDir\Uninstall-RigPanel.ps1`"" 'Remove RigPanel'
-New-Shortcut ([IO.Path]::Combine([Environment]::GetFolderPath('Desktop'), "$($conf.callsign) Rig Panel.lnk")) $ps $launchArgs 'Control the Yaesu FT-991A'
+New-Shortcut ([IO.Path]::Combine([Environment]::GetFolderPath('Desktop'), "$($conf.callsign) Rig Panel.lnk")) $ps $launchArgs 'Control your ham radio'
 Info "Start Menu + Desktop shortcut: `"$($conf.callsign) Rig Panel`""
 
 if ((Ask 'Start the panel automatically when you log in? (y/n)' 'y') -match '^[Yy]') {
@@ -163,7 +188,7 @@ for ($i = 0; $i -lt 30 -and -not $up; $i++) {
 Write-Host ''
 if (-not $up) { Warn "The panel didn't start. Try running: `"$Py`" `"$AppDir\rigpanel.py`" to see the error." }
 elseif ($st.ok) { Info 'Connected to the radio' }
-else { Warn "Panel is running but the radio isn't answering (check USB cable, power, COM port, MENU 031 = $($conf.baud))" }
+else { Warn "Panel is running but the radio isn't answering (check USB cable, power, COM port and baud rate $($conf.baud); or open Radio setup in the panel)" }
 
 Write-Host "`nDone! Open `"$($conf.callsign) Rig Panel`" from the Start Menu or Desktop, or visit http://localhost:$HttpPort" -ForegroundColor Cyan
 Write-Host '  Change settings later: run Install-RigPanel.bat again and choose to reconfigure, or use -Reconfigure.'

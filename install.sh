@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# RigPanel installer - browser control panel for the Yaesu FT-991A.
+# RigPanel installer - browser control panel for CAT-controlled ham radios (Yaesu, Icom, and more via Hamlib).
 # Works on Arch/Manjaro/CachyOS and Debian/Ubuntu/Mint/Raspberry Pi OS.
 # Installs for the current user only (no root needed except to join the serial-port group).
 #
@@ -8,7 +8,7 @@
 #        ./install.sh --callsign N0CALL --grid EM25fs --port /dev/ttyUSB0 --yes   unattended
 set -euo pipefail
 
-VERSION="1.1.0"
+VERSION="1.3.0"
 SRC="$(cd "$(dirname "$0")" && pwd)/app"
 APP_DIR="$HOME/.local/share/rigpanel"
 CFG_DIR="$HOME/.config/rigpanel"
@@ -46,7 +46,7 @@ while [ $# -gt 0 ]; do
   esac
 done
 
-bold "RigPanel $VERSION installer  -  Yaesu FT-991A control panel"
+bold "RigPanel $VERSION installer  -  ham radio control panel"
 echo
 
 # --- Requirements -------------------------------------------------------------
@@ -101,18 +101,20 @@ PY
   [ -z "$GRID" ] || [[ "$GRID" =~ ^[A-Ra-r]{2}[0-9]{2}([A-Xa-x]{2})?$ ]] || die "Invalid grid square: $GRID"
 
   if [ -z "$PORT" ]; then
-    mapfile -t PORTS < <(ls /dev/serial/by-id/ 2>/dev/null | grep -i 'CP210' | grep 'if00' | sed 's|^|/dev/serial/by-id/|' || true)
+    # Yaesu radios with a CP210x bridge show two ports (if00 = CAT); Icom radios name themselves
+    mapfile -t PORTS < <(ls /dev/serial/by-id/ 2>/dev/null | grep -iE 'CP210.*if00|Icom|IC-[0-9]' | sed 's|^|/dev/serial/by-id/|' || true)
     if [ "${#PORTS[@]}" -gt 0 ]; then
-      info "Found the radio's CAT port: ${PORTS[0]##*/}"
-      ask "Radio CAT serial port" "${PORTS[0]}"
+      info "Found a radio's CAT port: ${PORTS[0]##*/}"
+      ask "Radio CAT serial port (blank = find it automatically)" "${PORTS[0]}"
     else
-      warn "No FT-991A detected on USB. Plug it in and turn it on, or enter the port by hand."
+      warn "No radio detected on USB. Plug it in and turn it on, or enter the port by hand."
       ask "Radio CAT serial port (leave blank to auto-detect at startup)" ""
     fi
     PORT="$REPLY"
   fi
-  ask "Radio CAT baud rate (radio MENU 031)" "$BAUD"; BAUD="$REPLY"
-  [[ "$BAUD" =~ ^(4800|9600|19200|38400)$ ]] || die "Baud must be 4800, 9600, 19200 or 38400"
+  case "$PORT" in *Icom*|*IC-[0-9]*) [ "$BAUD" = 38400 ] && BAUD=115200 ;; esac
+  ask "Radio CAT baud rate (Yaesu FT-991A: MENU 031, Icom: CI-V USB Baud Rate)" "$BAUD"; BAUD="$REPLY"
+  [[ "$BAUD" =~ ^(4800|9600|19200|38400|57600|115200)$ ]] || die "Baud must be 4800, 9600, 19200, 38400, 57600 or 115200"
   ask "Your local Winlink VARA FM frequency in MHz" "$WL_FREQ"; WL_FREQ="$REPLY"
   WL_HZ=$(python3 -c "import sys; print(round(float(sys.argv[1]) * 1e6))" "$WL_FREQ") || die "Bad frequency: $WL_FREQ"
   ask "Web port for the panel" "$HTTP_PORT"; HTTP_PORT="$REPLY"
@@ -132,7 +134,7 @@ HTTP_PORT=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1])).get(
 # --- Install files --------------------------------------------------------------
 echo; bold "Installing"
 mkdir -p "$APP_DIR" "$BIN_DIR" "$DESKTOP_DIR" "$ICON_DIR"
-install -m 644 "$SRC"/index.html "$SRC"/menus.json "$SRC"/rigpanel.svg "$APP_DIR"/
+install -m 644 "$SRC"/index.html "$SRC"/menus.json "$SRC"/rigpanel.svg "$SRC"/radios.py "$APP_DIR"/
 install -m 755 "$SRC"/rigpanel.py "$APP_DIR"/
 install -m 644 "$SRC"/rigpanel.svg "$ICON_DIR"/rigpanel.svg
 echo "$VERSION" > "$APP_DIR/VERSION"
@@ -157,12 +159,12 @@ cat > "$DESKTOP_DIR/rigpanel.desktop" <<EOF
 [Desktop Entry]
 Type=Application
 Name=$CALLNAME Rig Panel
-Comment=Control the Yaesu FT-991A: frequencies, modes, memories and menu settings
+Comment=Control your ham radio: frequencies, modes, presets, PC mic and more
 Exec=$BIN_DIR/rigpanel
 Icon=rigpanel
 Terminal=false
 Categories=Network;HamRadio;
-Keywords=radio;yaesu;ft991a;cat;winlink;
+Keywords=radio;yaesu;icom;ft991a;ic7300;hamlib;cat;winlink;
 EOF
 command -v update-desktop-database >/dev/null && update-desktop-database "$DESKTOP_DIR" 2>/dev/null || true
 command -v gtk-update-icon-cache >/dev/null && gtk-update-icon-cache -q "$HOME/.local/share/icons/hicolor" 2>/dev/null || true
@@ -172,7 +174,7 @@ if [ "$HAVE_SYSTEMD" = 1 ]; then
   mkdir -p "$UNIT_DIR"
   cat > "$UNIT_DIR/rigpanel.service" <<EOF
 [Unit]
-Description=RigPanel FT-991A control panel (http://localhost:$HTTP_PORT)
+Description=RigPanel radio control panel (http://localhost:$HTTP_PORT)
 
 [Service]
 ExecStart=/usr/bin/env python3 %h/.local/share/rigpanel/rigpanel.py
@@ -206,7 +208,7 @@ if [ "$HAVE_SYSTEMD" = 1 ]; then
   if STATUS=$(curl -s --max-time 5 "http://localhost:$HTTP_PORT/api/status" 2>/dev/null) && [[ "$STATUS" == *'"ok": true'* ]]; then
     info "Connected to the radio"
   else
-    warn "Panel is running but the radio isn't answering yet (check USB cable, power, MENU 031 = $BAUD)"
+    warn "Panel is running but the radio isn't answering yet (check USB cable, power and baud rate $BAUD; or open Radio setup in the panel)"
   fi
 fi
 bold "Done!  Open \"$CALLNAME Rig Panel\" from your app menu, or visit http://localhost:$HTTP_PORT"
