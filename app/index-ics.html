@@ -1,0 +1,386 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ICS forms</title>
+<link rel="icon" href="/icon.svg" type="image/svg+xml">
+<script>
+  // Theme before first paint: accent colour and light/dark choice are remembered per browser
+  try {
+    document.documentElement.dataset.accent = localStorage.getItem("rp-accent") || "signal";
+    const m = localStorage.getItem("rp-mode"); if (m === "light" || m === "dark") document.documentElement.dataset.mode = m;
+  } catch {}
+</script>
+<style>
+  /* ---- Design tokens ------------------------------------------------------------------- */
+  :root {
+    --bg: #eef1f6; --panel: #ffffff; --panel-2: #f6f8fb; --ink: #141a26; --muted: #5d6779; --line: #dce2ec;
+    --tx: #e5372b; --ok: #12a150; --warn: #d98a00;
+    --display-bg: #0b111b; --display-line: #1d2b3d; --display-sub: #8fa6bd;
+    --shadow: 0 1px 2px rgba(16, 24, 40, .06), 0 4px 14px rgba(16, 24, 40, .06);
+    --radius: 14px;
+    /* section colours */
+    --c-quick: #f59e0b; --c-presets: #ec4899; --c-freq: #06b6d4; --c-mode: #8b5cf6;
+    --c-rptr: #10b981; --c-levels: #3b82f6; --c-mic: #ef4444;
+    /* mode families */
+    --m-voice: #3b82f6; --m-data: #8b5cf6; --m-cw: #f59e0b; --m-dig: #14b8a6;
+  }
+  :root[data-accent="signal"] { --brand: #ff7a1a; --brand-2: #ffb547; --lcd: #ffc163; --lcd-glow: rgba(255, 166, 64, .45); }
+  :root[data-accent="ocean"]  { --brand: #1f8fff; --brand-2: #22d3ee; --lcd: #7fe3ff; --lcd-glow: rgba(64, 196, 255, .45); }
+  :root[data-accent="aurora"] { --brand: #10b981; --brand-2: #84cc16; --lcd: #7ee2a8; --lcd-glow: rgba(126, 226, 168, .45); }
+  :root[data-accent="violet"] { --brand: #8b5cf6; --brand-2: #ec4899; --lcd: #d4c2ff; --lcd-glow: rgba(180, 150, 255, .45); }
+  :root { --brand-ink: #ffffff; }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-mode="light"]) {
+      --bg: #0c1018; --panel: #141a25; --panel-2: #1a2130; --ink: #e8ecf3; --muted: #97a3b6; --line: #263042;
+      --tx: #ff5a4f; --ok: #3ad07a; --warn: #ffb020; --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 6px 20px rgba(0, 0, 0, .25);
+    }
+  }
+  :root[data-mode="dark"] {
+    --bg: #0c1018; --panel: #141a25; --panel-2: #1a2130; --ink: #e8ecf3; --muted: #97a3b6; --line: #263042;
+    --tx: #ff5a4f; --ok: #3ad07a; --warn: #ffb020; --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 6px 20px rgba(0, 0, 0, .25);
+  }
+
+
+  /* ---- ICS forms ----------------------------------------------------------------------- */
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  body::before { content: ""; position: fixed; inset: 0 0 auto 0; height: 200px; pointer-events: none; z-index: -1;
+                 background: radial-gradient(60% 100% at 10% 0%, color-mix(in srgb, var(--brand) 16%, transparent), transparent 70%); }
+  button, input, select, textarea { font: inherit; color: inherit; }
+  button { border: 1px solid var(--line); background: var(--panel); border-radius: 10px; padding: 6px 12px; min-height: 36px; cursor: pointer; }
+  button:hover { border-color: var(--brand); }
+  button.primary { background: var(--brand); border-color: var(--brand); color: var(--brand-ink); font-weight: 600; }
+  button.danger { color: var(--tx); }
+  button.sure { background: var(--tx); border-color: var(--tx); color: #fff; }
+  input, textarea, select { border: 1px solid var(--line); background: var(--panel-2); border-radius: 8px; padding: 6px 8px; min-width: 0; width: 100%; }
+  input:focus, textarea:focus, select:focus { outline: 2px solid color-mix(in srgb, var(--brand) 60%, transparent); outline-offset: 0; border-color: var(--brand); }
+  textarea { resize: vertical; line-height: 1.4; }
+  .wrap { max-width: 1500px; margin: 0 auto; padding: 14px 16px 24px; display: grid; gap: 14px;
+          grid-template-columns: minmax(0, 1fr) 290px; align-items: start; }
+  header { grid-column: 1 / -1; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; padding: 8px 12px;
+           background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); }
+  header h1 { margin: 0; font-size: 18px; } header .sp { flex: 1; }
+  header a { color: var(--muted); text-decoration: none; font-size: 14px; } header a:hover { color: var(--brand); }
+  .chip { font: 600 13px ui-monospace, monospace; padding: 4px 10px; border-radius: 999px; background: var(--panel-2); border: 1px solid var(--line); }
+  section { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px; box-shadow: var(--shadow); min-width: 0; }
+  h2 { margin: 0 0 10px; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+  aside { display: grid; gap: 14px; position: sticky; top: 14px; }
+  .new { display: grid; gap: 6px; }
+  .new button { text-align: left; display: grid; grid-template-columns: 52px 1fr; align-items: center; min-height: 32px; padding: 4px 10px; font-size: 14px; }
+  .new .grp { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin: 6px 0 0; }
+  .new .grp:first-child { margin-top: 0; }
+  label.f.chk { display: flex; gap: 8px; align-items: center; font-size: 13px; }
+  label.f.chk input { width: 18px; height: 18px; }
+  .new b { font: 700 13px ui-monospace, monospace; color: var(--brand); }
+  .saved { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; max-height: 55vh; overflow: auto; }
+  .saved li { border: 1px solid var(--line); border-radius: 10px; padding: 6px 10px; cursor: pointer; display: grid; gap: 1px; }
+  .saved li:hover, .saved li.cur { border-color: var(--brand); }
+  .saved b { font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .saved span { font-size: 12px; color: var(--muted); }
+  .empty { color: var(--muted); font-size: 14px; }
+  /* the form */
+  .bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 12px; }
+  .bar h3 { margin: 0; font-size: 17px; flex: 1 1 260px; }
+  .bar .status { font-size: 12px; color: var(--muted); }
+  .form { display: grid; gap: 8px; }
+  .frow { display: grid; gap: 8px; }
+  label.f { display: grid; gap: 3px; font-size: 12px; font-weight: 600; color: var(--muted); align-content: start; }
+  label.f input, label.f textarea { font-size: 14px; font-weight: 400; color: var(--ink); }
+  .tbl { display: grid; gap: 6px; }
+  .tbl .th { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; font-size: 12px; font-weight: 600; color: var(--muted); }
+  .tbl .th .sp { flex: 1; }
+  .tbl .th button, .tbl .th select { min-height: 30px; padding: 3px 10px; font-size: 13px; width: auto; }
+  .scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; }
+  table { border-collapse: collapse; width: 100%; }
+  th { font-size: 11px; color: var(--muted); text-align: left; padding: 6px 4px; background: var(--panel-2); border-bottom: 1px solid var(--line); }
+  td { padding: 3px 3px; border-bottom: 1px solid var(--line); }
+  td input, td select { padding: 4px 6px; border-radius: 6px; }
+  td.x { width: 30px; } td.x button { min-height: 28px; padding: 0 8px; color: var(--muted); }
+  .toast { position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%); background: var(--ink); color: var(--bg);
+           padding: 8px 16px; border-radius: 999px; font-size: 14px; opacity: 0; transition: opacity .2s; pointer-events: none; }
+  .toast.show { opacity: .95; }
+  @media (max-width: 1000px) { .wrap { grid-template-columns: 1fr; } aside { position: static; } }
+  @media (max-width: 700px) { .frow { grid-template-columns: 1fr 1fr !important; } .frow > :first-child { grid-column: 1 / -1; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>📝 ICS forms</h1>
+  <span class="chip" id="me" title="Your callsign">—</span>
+  <span class="sp"></span>
+  <a href="/" target="rigpanel">← RigPanel</a>
+</header>
+
+<main style="min-width:0">
+  <section id="editor" hidden>
+    <div class="bar">
+      <h3 id="f-title"></h3>
+      <span class="status" id="status"></span>
+      <button class="primary" id="b-pdf" title="Open the filled-in form as a PDF to print or save">🖨 PDF</button>
+      <button id="b-copy" title="Start a new form with the same contents (e.g. for the next operational period)">Copy</button>
+      <button class="danger" id="b-del">Delete</button>
+    </div>
+    <div class="form" id="form"></div>
+  </section>
+  <section id="start">
+    <h2>ICS forms</h2>
+    <p class="empty">Pick one of the 16 ICS forms on the right to start a new one, or open one you saved. Forms save as you type, and
+      <b>🖨 PDF</b> gives you the filled-in form in the standard layout to print, file or email.</p>
+  </section>
+</main>
+
+<aside>
+  <section>
+    <h2>New form</h2>
+    <div class="new" id="new"></div>
+  </section>
+  <section>
+    <h2>Saved forms</h2>
+    <ul class="saved" id="saved"></ul>
+  </section>
+</aside>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"})[c]);
+const post = (path, body) => fetch(path, {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(body)}).then(r => r.json());
+function toast(t) { const e = $("toast"); e.textContent = t; e.classList.add("show"); clearTimeout(toast.t); toast.t = setTimeout(() => e.classList.remove("show"), 2400); }
+const pad = n => String(n).padStart(2, "0");
+const today = (d = new Date()) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+const hhmm = (d = new Date()) => `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+const nowDT = () => `${today()}T${hhmm()}`;
+const INPUT = {date: "date", time: "time", datetime: "datetime-local", text: "text"};
+// an input for a box of the given kind; check = tick box, choice:A|B = pick one
+function input(kind, value, set) {
+  let i;
+  if (kind.startsWith("choice:")) {
+    i = document.createElement("select"); i.add(new Option("", ""));
+    for (const o of kind.slice(7).split("|")) i.add(new Option(o, o));
+    i.value = value || ""; i.onchange = () => set(i.value);
+  } else if (kind === "check") {
+    i = document.createElement("input"); i.type = "checkbox"; i.checked = !!value; i.onchange = () => set(i.checked ? "1" : "");
+  } else {
+    i = document.createElement("input"); i.type = INPUT[kind] || "text"; i.value = value || ""; i.oninput = () => set(i.value);
+  }
+  return i;
+}
+
+let specs = {}, conf = {}, form = null, saveTimer = null, saving = Promise.resolve();
+
+// ---- new forms start with your callsign and today's date filled in -------------------------------------
+function blank(type) {
+  const spec = specs[type], call = (conf.callsign || "").toUpperCase(), f = {}, tables = {};
+  const val = {$call: call, $today: today(), $time: hhmm(), $now: nowDT()};
+  const keys = spec.layout.filter(b => b[0] === "row").flatMap(b => b[1].map(c => c[1]));
+  if (keys.includes("prep_name")) f.prep_name = call;
+  if (keys.includes("op_date_from")) f.op_date_from = today();
+  for (const [k, v] of Object.entries(spec.defaults || {})) f[k] = val[v] ?? v;
+  for (const b of spec.layout)   // tables that start with the form's standard rows (positions, units)
+    if (b[0] === "table" && b[6]?.rows) tables[b[2]] = b[6].rows.map(r => ({...r}));
+  return {id: null, type, fields: f, tables};
+}
+
+// ---- editor, built from the same layout the PDF is drawn from ---------------------------------------------
+function render() {
+  const spec = specs[form.type];
+  $("start").hidden = true; $("editor").hidden = false;
+  $("f-title").textContent = spec.title;
+  const box = $("form"); box.innerHTML = "";
+  for (const b of spec.layout) {
+    if (b[0] === "row") {
+      const row = document.createElement("div"); row.className = "frow";
+      row.style.gridTemplateColumns = b[1].map(c => `${Math.round(c[2] * 100)}fr`).join(" ");
+      for (const [label, key, , kind] of b[1]) row.append(field(label, key, kind));
+      box.append(row);
+    } else if (b[0] === "area") {
+      const l = document.createElement("label"); l.className = "f"; l.textContent = b[1];
+      const t = document.createElement("textarea"); t.rows = Math.max(3, Math.round(b[3] / 22)); t.value = form.fields[b[2]] || "";
+      t.oninput = () => { form.fields[b[2]] = t.value; changed(); };
+      l.append(t); box.append(l);
+    } else box.append(table(b));
+  }
+  markList();
+}
+
+function field(label, key, kind) {
+  const l = document.createElement("label"); l.className = "f" + (kind === "check" ? " chk" : ""); l.textContent = label;
+  const i = input(kind, form.fields[key], v => { form.fields[key] = v; changed(); });
+  kind === "check" ? l.prepend(i) : l.append(i); return l;
+}
+
+function table([, label, key, cols, , , opts = {}]) {
+  const rows = form.tables[key] = form.tables[key] || [];
+  const wrap = document.createElement("div"); wrap.className = "tbl";
+  const th = document.createElement("div"); th.className = "th";
+  th.innerHTML = `<span>${esc(label)}</span><span class="sp"></span>`;
+  if (opts.import === "presets") th.append(btn("+ My presets", "Add the frequencies saved in RigPanel's presets", () => addPresets(rows, cols)));
+  if (opts.import === "netlog" && (conf.trials || []).includes("net")) th.append(netPicker(rows, key));
+  th.append(btn("+ Row", "Add a row", () => { rows.push(newRow(key)); changed(); render(); focusLast(key); }));
+  const sc = document.createElement("div"); sc.className = "scroll";
+  const t = document.createElement("table"); t.dataset.key = key;
+  t.style.minWidth = `${cols.length * 105}px`;   // wide forms (211, 205) scroll sideways instead of squeezing
+  t.innerHTML = `<thead><tr>${cols.map(c => `<th style="width:${c[2] * 100}%">${esc(c[0])}</th>`).join("")}<th></th></tr></thead>`;
+  const tb = document.createElement("tbody");
+  if (!rows.length) rows.push({});
+  rows.forEach((r, n) => {
+    const tr = document.createElement("tr");
+    for (const [, ck, , kind] of cols) {
+      const td = document.createElement("td");
+      td.append(input(kind, r[ck], v => { r[ck] = v; changed(); })); tr.append(td);
+    }
+    const x = document.createElement("td"); x.className = "x";
+    x.append(btn("×", "Remove this row", () => { rows.splice(n, 1); changed(); render(); }));
+    tr.append(x); tb.append(tr);
+  });
+  t.append(tb); sc.append(t); wrap.append(th, sc);
+  return wrap;
+}
+const btn = (text, title, fn) => { const b = document.createElement("button"); b.type = "button"; b.textContent = text; b.title = title; b.onclick = fn; return b; };
+const newRow = key => key === "log" ? {time: hhmm()} : key === "activity" ? {dt: nowDT()} : key === "checkins" ? {checkin: nowDT()} : {};
+function focusLast(key) { const t = document.querySelector(`table[data-key="${key}"] tbody tr:last-child input:not([type=time]):not([type=datetime-local])`); t && t.focus(); }
+const blankRow = r => !Object.entries(r).some(([k, v]) => String(v).trim() && !["time", "dt", "checkin"].includes(k));
+
+// ICS-205: channels from RigPanel's presets (repeater offsets by band)
+async function addPresets(rows, cols) {
+  let ps = [];
+  try { ps = await (await fetch("/api/presets")).json(); } catch {}
+  if (!ps.length) { toast("No presets saved in RigPanel yet."); return; }
+  const keep = rows.filter(r => !blankRow(r)); rows.length = 0; rows.push(...keep);
+  for (const p of ps) {
+    const mhz = p.freq / 1e6;
+    const off = p.offset ? p.offset / 1e6 : mhz >= 144 && mhz < 148 ? 0.6 : mhz >= 222 && mhz < 225 ? 1.6 : mhz >= 420 && mhz < 450 ? 5 : mhz >= 50 && mhz < 54 ? 0.5 : 0;
+    const tx = p.shift === "+" ? mhz + off : p.shift === "-" ? mhz - off : mhz;
+    const r = {ch: String(rows.length + 1), name: p.name || "", rx: mhz.toFixed(4), tx: tx.toFixed(4),
+               tx_tone: p.tone ? String(p.tone) : "", mode: /C4FM|DV|DMR|D-STAR|DIG|DATA/i.test(p.mode || "") ? "D" : "A",
+               remarks: p.mode && !/^FM$/i.test(p.mode) ? p.mode : ""};
+    rows.push(Object.fromEntries(cols.map(c => c[1]).filter(k => k in r).map(k => [k, r[k]])));
+  }
+  changed(); render(); toast(`Added ${ps.length} channel${ps.length > 1 ? "s" : ""} from your presets.`);
+}
+
+// ICS-309: the check-ins of a net from the Net log
+function netPicker(rows, key) {
+  const s = document.createElement("select"); s.title = "Fill the log with the check-ins of a net from the Net log";
+  s.innerHTML = `<option value="">+ From a net log…</option>`;
+  fetch("/api/netlogs").then(r => r.json()).then(list => {
+    for (const n of list) s.add(new Option(`${n.name || "Net"} · ${n.start ? new Date(n.start).toLocaleDateString() : ""} (${n.count})`, n.id));
+    if (!list.length) s.options[0].text = "No net logs yet";
+  }).catch(() => {});
+  s.onchange = async () => {
+    if (!s.value) return;
+    let log; try { log = await (await fetch(`/api/netlog?id=${encodeURIComponent(s.value)}`)).json(); } catch { return; }
+    s.value = "";
+    const to = (log.ncs || "NET").toUpperCase();
+    const keep = rows.filter(r => !blankRow(r)); rows.length = 0; rows.push(...keep);
+    for (const e of log.entries || []) {
+      const flags = [e.traffic && "has traffic", e.short && "short time", e.mobile && "mobile"].filter(Boolean).join(", ");
+      const t = e.t ? new Date(e.t) : null;
+      if (key === "checkins")   // ICS-211: one row per station
+        rows.push({resource: e.call || "", checkin: t ? `${today(t)}T${hhmm(t)}` : "", leader: e.name || "", persons: "1",
+                   contact: `${e.call || ""}${log.freq ? " on " + log.freq : ""}`, home: e.loc || "", quals: [flags, e.notes].filter(Boolean).join(". ")});
+      else
+        rows.push({time: t ? hhmm(t) : "", from: e.call || "", to,
+                   message: ["Check-in" + (e.name ? `, ${e.name}` : "") + (e.loc ? ` (${e.loc})` : ""), flags, e.notes].filter(Boolean).join(". ")});
+    }
+    const st = log.start && new Date(log.start), en = log.end && new Date(log.end);
+    if (st) Object.assign(form.fields, {op_date_from: today(st), op_time_from: hhmm(st)});
+    if (en) Object.assign(form.fields, {op_date_to: today(en), op_time_to: hhmm(en)});
+    if (!form.fields.incident && log.name) form.fields.incident = log.name;
+    if (log.logger && "operator" in form.fields) form.fields.operator = log.logger;
+    if (st && "start" in form.fields) form.fields.start = `${today(st)}T${hhmm(st)}`;
+    changed(); render(); toast(`Added ${(log.entries || []).length} check-ins from ${log.name || "the net"}.`);
+  };
+  return s;
+}
+
+// ---- saving: a moment after each change -----------------------------------------------------------------
+function changed() { $("status").textContent = "Editing…"; clearTimeout(saveTimer); saveTimer = setTimeout(save, 700); }
+function save() {
+  clearTimeout(saveTimer);
+  saving = saving.then(async () => {
+    try {
+      const r = await post("/api/icsform", form);
+      if (!r.ok) throw new Error(r.message);
+      const isNew = !form.id; form.id = r.id;
+      $("status").textContent = "Saved " + hhmm();
+      if (isNew) history.replaceState(null, "", `#${r.id}`);
+      loadList();
+    } catch (e) { $("status").textContent = "Not saved: " + (e.message || "RigPanel isn't running"); }
+  });
+  return saving;
+}
+
+// ---- the saved forms list --------------------------------------------------------------------------------
+async function loadList() {
+  let list = [];
+  try { list = await (await fetch("/api/icsforms")).json(); } catch {}
+  const ul = $("saved"); ul.innerHTML = list.length ? "" : `<li class="empty" style="cursor:default;border:0">None yet</li>`;
+  for (const f of list) {
+    const li = document.createElement("li"); li.dataset.id = f.id;
+    const when = f.updated ? new Date(f.updated).toLocaleString([], {month: "short", day: "numeric", hour: "2-digit", minute: "2-digit"}) : "";
+    li.innerHTML = `<b>${esc(f.title)}</b><span>ICS-${esc(f.type)} · ${esc(when)}</span>`;
+    li.onclick = () => openForm(f.id);
+    ul.append(li);
+  }
+  markList();
+}
+function markList() { for (const li of $("saved").children) li.classList.toggle("cur", !!form && li.dataset.id === form.id); }
+async function openForm(id) {
+  await save_if_dirty();
+  try { form = await (await fetch(`/api/icsform?id=${encodeURIComponent(id)}`)).json(); } catch { return; }
+  if (!form.type) { toast("That form couldn't be opened."); return; }
+  form.tables = form.tables || {}; form.fields = form.fields || {};
+  history.replaceState(null, "", `#${id}`); $("status").textContent = ""; render();
+}
+const save_if_dirty = () => (saveTimer && form ? save() : saving);
+
+// ---- buttons ----------------------------------------------------------------------------------------------
+$("b-pdf").onclick = async () => { await save(); if (form.id) window.open(`/api/icsform-pdf?id=${encodeURIComponent(form.id)}`, "_blank"); };
+$("b-copy").onclick = async () => {
+  await save_if_dirty();
+  form = {id: null, type: form.type, fields: {...form.fields}, tables: JSON.parse(JSON.stringify(form.tables))};
+  render(); await save(); toast("Copied. You're now editing the copy.");
+};
+$("b-del").onclick = async () => {
+  const b = $("b-del");
+  if (!b.classList.contains("sure")) {   // ask by changing the button, not with a pop-up
+    b.classList.add("sure"); b.textContent = "Delete for good?";
+    setTimeout(() => { b.classList.remove("sure"); b.textContent = "Delete"; }, 3000); return;
+  }
+  b.classList.remove("sure"); b.textContent = "Delete";
+  clearTimeout(saveTimer); saveTimer = null;
+  if (form.id) await post("/api/icsform/delete", {id: form.id});
+  form = null; history.replaceState(null, "", location.pathname);
+  $("editor").hidden = true; $("start").hidden = false; loadList(); toast("Form deleted.");
+};
+
+// ---- start --------------------------------------------------------------------------------------------------
+(async () => {
+  try { conf = await (await fetch("/api/config")).json(); } catch {}
+  $("me").textContent = conf.callsign || "—";
+  let sp; try { sp = await (await fetch("/api/icsform-specs")).json(); } catch { toast("RigPanel isn't running"); return; }
+  specs = sp.forms;
+  const byNum = (a, b) => parseInt(a) - parseInt(b) || a.localeCompare(b);   // 205, 205A, 206 ... 213, 213RR
+  const groups = [["Most used", sp.most_used], ["All forms", Object.keys(specs).filter(t => !sp.most_used.includes(t)).sort(byNum)]];
+  for (const [title, types] of groups) {
+    const h = document.createElement("div"); h.className = "grp"; h.textContent = title; $("new").append(h);
+    for (const type of types) {
+      const s = specs[type];
+      const b = btn("", `Start a new ${s.short}`, async () => { await save_if_dirty(); form = blank(type); render(); save(); });
+      b.innerHTML = `<b>${esc(type)}</b><span>${esc(s.short.replace(/^ICS-\S+ /, ""))}</span>`;
+      $("new").append(b);
+    }
+  }
+  await loadList();
+  if (location.hash.length > 1) openForm(location.hash.slice(1));
+})();
+addEventListener("beforeunload", () => { if (saveTimer && form) navigator.sendBeacon?.("/api/icsform", new Blob([JSON.stringify(form)], {type: "application/json"})); });
+</script>
+</body>
+</html>

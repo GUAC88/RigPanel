@@ -7,9 +7,10 @@
 #        ./install.sh --reconfigure   re-run the setup questions on an existing install
 #        ./install.sh --callsign N0CALL --grid EM25fs --port /dev/ttyUSB0 --yes   unattended
 #        add --netlog or --no-netlog to choose the Net log add-on without being asked
+#        add --winlink-apps or --no-winlink-apps to choose Winlink Express + VARA FM (see install-winlink.sh)
 set -euo pipefail
 
-VERSION="1.5.0"
+VERSION="1.6.0"
 SRC="$(cd "$(dirname "$0")" && pwd)/app"
 APP_DIR="$HOME/.local/share/rigpanel"
 CFG_DIR="$HOME/.config/rigpanel"
@@ -19,7 +20,7 @@ UNIT_DIR="$HOME/.config/systemd/user"
 DESKTOP_DIR="$HOME/.local/share/applications"
 ICON_DIR="$HOME/.local/share/icons/hicolor/scalable/apps"
 
-CALL="" GRID="" PORT="" BAUD="38400" HTTP_PORT="8073" WL_FREQ="145.030" YES=0 RECONF=0 NETLOG=""
+CALL="" GRID="" PORT="" BAUD="38400" HTTP_PORT="8073" WL_FREQ="145.030" YES=0 RECONF=0 NETLOG="" WINLINK_APPS=""
 NETLOG_FILES="index-net.html netlogcore.py netexport.py"
 
 bold() { printf '\033[1m%s\033[0m\n' "$*"; }
@@ -45,7 +46,9 @@ while [ $# -gt 0 ]; do
     --reconfigure) RECONF=1; shift ;;
     --netlog) NETLOG=y; shift ;;
     --no-netlog) NETLOG=n; shift ;;
-    -h|--help) sed -n '2,10p' "$0"; exit 0 ;;
+    --winlink-apps) WINLINK_APPS=y; shift ;;
+    --no-winlink-apps) WINLINK_APPS=n; shift ;;
+    -h|--help) sed -n '2,11p' "$0"; exit 0 ;;
     *) die "Unknown option: $1 (try --help)" ;;
   esac
 done
@@ -144,10 +147,23 @@ if [ -z "$NETLOG" ]; then
   ask "Install the Net log add-on? (y/n)" "$DEF"; [[ "$REPLY" =~ ^[Yy] ]] && NETLOG=y || NETLOG=n
 fi
 
+# --- Optional: Winlink Express + VARA FM (Windows programs under Wine; install-winlink.sh does the work) ---
+if [ -z "$WINLINK_APPS" ]; then
+  if [ "$(uname -m)" != x86_64 ] || { [ -n "$(find "$HOME/.wine-vara/drive_c" -maxdepth 3 -iname 'VARAFM.exe' 2>/dev/null | head -1)" ] &&
+       [ -n "$(find "$HOME/.wine-vara/drive_c" -maxdepth 3 -iname 'RMS Express.exe' 2>/dev/null | head -1)" ]; }; then
+    WINLINK_APPS=n   # can't run them here, or both are already installed
+  else
+    echo "  Winlink Express + VARA FM: send and receive Winlink email over the radio. They're Windows programs, so"
+    echo "  they run under Wine; you download them from winlink.org in your browser and this installer does the rest."
+    ask "Set up Winlink Express and VARA FM? (y/n)" "n"; [[ "$REPLY" =~ ^[Yy] ]] && WINLINK_APPS=y || WINLINK_APPS=n
+  fi
+fi
+
 # --- Install files --------------------------------------------------------------
 echo; bold "Installing"
 mkdir -p "$APP_DIR" "$BIN_DIR" "$DESKTOP_DIR" "$ICON_DIR"
-install -m 644 "$SRC"/index.html "$SRC"/menus.json "$SRC"/rigpanel.svg "$SRC"/radios.py "$SRC"/nwr.json "$APP_DIR"/
+install -m 644 "$SRC"/index.html "$SRC"/menus.json "$SRC"/rigpanel.svg "$SRC"/radios.py "$SRC"/nwr.json \
+  "$SRC"/icsforms.py "$SRC"/index-ics.html "$APP_DIR"/
 install -m 755 "$SRC"/rigpanel.py "$APP_DIR"/
 install -m 644 "$SRC"/rigpanel.svg "$ICON_DIR"/rigpanel.svg
 echo "$VERSION" > "$APP_DIR/VERSION"
@@ -219,6 +235,13 @@ if ! id -nG "$USER" | tr ' ' '\n' | grep -qx "$SERIAL_GROUP"; then
   else
     warn "Run later:  sudo usermod -aG $SERIAL_GROUP $USER   (then log out and back in)"
   fi
+fi
+
+# --- Winlink Express + VARA FM ---------------------------------------------------------
+if [ "$WINLINK_APPS" = y ]; then
+  echo
+  WL_ARGS=(--winlink --vara); [ "$YES" = 1 ] && WL_ARGS+=(--yes)
+  bash "$(dirname "$SRC")/install-winlink.sh" "${WL_ARGS[@]}" || warn "Winlink/VARA setup didn't finish; run ./install-winlink.sh to try again"
 fi
 
 # --- Check ------------------------------------------------------------------------

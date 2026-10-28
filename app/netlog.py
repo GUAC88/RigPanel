@@ -17,7 +17,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))   # netlogcore / 
 sys.dont_write_bytecode = True   # no __pycache__ folders in the install folder
 import netlogcore  # noqa: E402
 
-VERSION = "1.1.0"
+VERSION = "1.2.0"
 HERE = os.path.dirname(os.path.abspath(__file__))
 if os.name == "nt":
     CONFIG_DIR = os.path.join(os.environ.get("APPDATA") or os.path.expanduser("~"), "NetLog")

@@ -67,7 +67,7 @@ def demo_log():
                      "call": call, "name": name, "loc": loc, "grid": "", "miles": mi,
                      "traffic": flag == "traffic", "short": flag == "short", "mobile": flag == "mobile", "ack": i < 5,
                      "notes": {0: "Weather report for the county", 2: "Leaving at 0130Z", 5: "Message for net manager"}.get(i, "")})
-    return {"id": start.strftime("%Y%m%d-%H%M%S"), "name": "Anytown ARES Weekly Net", "ncs": "N0CALL",
+    return {"id": start.strftime("%Y%m%d-%H%M%S"), "name": "Anytown ARES Weekly Net", "ncs": "W5ABC", "logger": "N0CALL",
             "freq": "146.520 MHz FM", "mode": "", "start": start.isoformat().replace("+00:00", "Z"), "end": None, "entries": ents}
 
 
@@ -125,7 +125,7 @@ class Handler(BaseHTTPRequestHandler):
         data = {"/api/status": STATUS, "/api/presets": PRESETS, "/api/profiles": PROFILES, "/api/memories": MEMORIES,
                 "/api/lookups": [], "/api/station": STATION, "/api/letterhead": LETTERHEAD, "/api/radio": RADIO, "/api/hamlib-models": [],
                 "/api/config": {"callsign": "N0CALL", "grid": "EM15", "version": VERSION, "background": bg,
-                                "radio": "FT-991A", "caps": CAPS, "trials": ["net"]},
+                                "radio": "FT-991A", "caps": CAPS, "trials": ["net", "ics"]},
                 "/api/lookup": {"call": q.get("call", "N0CALL"), "status": "VALID", "name": "Sample Operator", "type": "PERSON",
                                 "cityState": "ANYTOWN, US", "grid": "EM15"}}.get(p)
         if data is None:

@@ -1,10 +1,12 @@
-# Net Log 1.1.0
+# Net Log 1.2.0
 
 A browser-based logger for whoever is running net control on a ham radio net. It works on its own, with no radio
 connected, and is also available as an add-on inside [RigPanel](https://github.com/GUAC88/RigPanel).
 
 - **Check-ins:** type a callsign and press Enter. Each check-in is stamped in UTC, and the name, city and distance
   fill in from the FCC database (US calls, via callook.info). Duplicates are caught, and `/M` calls are flagged mobile.
+- **Net control and logger:** a **Logger** field under Net control for when someone else is running the net.
+  Both appear on the exports.
 - **Flags:** **Traffic**, **Short time**, **Mobile**, an **✓ acknowledged** tick and notes on every check-in.
 - **Saved as you go:** every change is saved. If the browser closes mid-net, the open net comes back when you reopen it.
 - **Export:** **PDF** or **Word (.docx)** with your letterhead, **CSV** for spreadsheets, **Copy summary** for posting,
@@ -26,7 +28,7 @@ Runs on **Linux** and **Windows 10/11** with Python 3.8+ and nothing else to ins
 ## Install
 ### Linux
 ```
-tar xzf netlog-1.1.0.tar.gz
+tar xzf netlog-1.2.0.tar.gz
 cd netlog
 ./install.sh
 ```
@@ -38,13 +40,13 @@ app menu and starts it in the background at login. Open it at http://localhost:8
 - Remove: `./uninstall.sh` (add `--purge` to also delete settings **and saved logs**)
 
 ### Windows
-Download **`NetLog-1.1.0-Setup.exe`** from the [releases page](https://github.com/GUAC88/RigPanel/releases) and run it.
+Download **`NetLog-1.2.0-Setup.exe`** from the [releases page](https://github.com/GUAC88/RigPanel/releases) and run it.
 It brings its own Python, so there's nothing to install first. It installs for your account only (no admin rights),
 asks for your callsign and grid square, and adds Start Menu and Desktop shortcuts. Remove it in **Settings → Apps**;
 your logs are kept. SmartScreen may warn because the installer isn't code-signed yet: **More info → Run anyway**.
 
-For managed installs use **`NetLog-1.1.0.msi`** (`msiexec /i NetLog-1.1.0.msi /qn`). Net Log asks for your callsign when it first opens.
-The script install from `netlog-1.1.0-windows.zip` (`windows\Install-NetLog.bat`) still works with your own Python.
+For managed installs use **`NetLog-1.2.0.msi`** (`msiexec /i NetLog-1.2.0.msi /qn`). Net Log asks for your callsign when it first opens.
+The script install from `netlog-1.2.0-windows.zip` (`windows\Install-NetLog.bat`) still works with your own Python.
 
 ## Where things are kept
 | | Linux | Windows |

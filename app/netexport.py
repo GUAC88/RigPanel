@@ -119,6 +119,7 @@ def summary(log):
         "time": (start.strftime("%H:%M") + (" – " + end.strftime("%H:%M") if end else " – (open)") + " UTC") if start else "",
         "duration": dur,
         "ncs": log.get("ncs") or "",
+        "logger": log.get("logger") or "",
         "freq": log.get("freq") or "",
         "count": len(ents),
         "traffic": [e.get("call", "") for e in ents if e.get("traffic")],
@@ -268,7 +269,7 @@ def build_pdf(log, lh, imgs):
     p.text(M, y, s["name"], "B", 17, ink)
     y -= 24
     details = [("Date", s["date"]), ("Time", s["time"]), ("Duration", s["duration"] or "—"),
-               ("Net control", s["ncs"] or "—"), ("Frequency", s["freq"] or "—"),
+               ("Net control", s["ncs"] or "—")] + ([("Logger", s["logger"])] if s["logger"] else []) + [("Frequency", s["freq"] or "—"),
                ("Check-ins", f"{s['count']} total · {len(s['traffic'])} with traffic · {s['short']} short time")]
     colw = (W - 2 * M) / 2
     for i, (k, v) in enumerate(details):
@@ -476,7 +477,7 @@ def build_docx(log, lh, imgs):
     body = [_p(_run("Net log", bold=True, size=9, color="646C78", caps=True, spacing=20), before=120, after=40),
             _p(_run(s["name"], bold=True, size=17, color="141A26"), after=160)]
     details = [("Date", s["date"]), ("Time", s["time"]), ("Duration", s["duration"] or "—"),
-               ("Net control", s["ncs"] or "—"), ("Frequency", s["freq"] or "—"),
+               ("Net control", s["ncs"] or "—")] + ([("Logger", s["logger"])] if s["logger"] else []) + [("Frequency", s["freq"] or "—"),
                ("Check-ins", f"{s['count']} total · {len(s['traffic'])} with traffic · {s['short']} short time")]
     half = TEXT_W // 2
     drows = []
@@ -484,6 +485,8 @@ def build_docx(log, lh, imgs):
         cells = ""
         for k, v in details[i:i + 2]:
             cells += _cell(_p(_run(k, bold=True, size=7.5, color="646C78", caps=True)) + _p(_run(v, size=10)), half, valign="top")
+        if len(details[i:i + 2]) == 1:   # odd number of details: keep the two-column grid
+            cells += _cell(_p(""), half)
         drows.append("<w:tr>" + cells + "</w:tr>")
     body.append(_table([half, half], drows, borders=False))
     body.append(_p("", after=120))

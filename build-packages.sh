@@ -14,7 +14,8 @@ python3 - "$PWD" "$STAGE" "$OUT" "$RP" "$NL" <<'PY'
 import os, shutil, sys, tarfile, zipfile
 src, stage, out, rp, nl = sys.argv[1:]
 ADDON = ["index-net.html", "netlogcore.py", "netexport.py"]
-CORE = ["rigpanel.py", "radios.py", "index.html", "menus.json", "nwr.json", "rigpanel.svg", "rigpanel.ico"]
+CORE = ["rigpanel.py", "radios.py", "index.html", "menus.json", "nwr.json", "rigpanel.svg", "rigpanel.ico",
+        "icsforms.py", "index-ics.html"]
 NETLOG_APP = ["netlog.py", "netlogcore.py", "netexport.py", "index-net.html", "netlog.svg", "netlog.ico"]
 
 def copy(rel, dest_root, dest_rel=None):

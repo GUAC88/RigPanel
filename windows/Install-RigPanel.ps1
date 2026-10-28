@@ -2,9 +2,10 @@
 # Installs for the current user only. Run via Install-RigPanel.bat (double-click).
 #   -Reconfigure   re-run the setup questions on an existing install
 #   -NetLog / -NoNetLog   install (or leave out) the Net log add-on without being asked
-param([switch]$Reconfigure, [switch]$NetLog, [switch]$NoNetLog)
+#   -WinlinkApps / -NoWinlinkApps   set up (or skip) Winlink Express + VARA FM without being asked
+param([switch]$Reconfigure, [switch]$NetLog, [switch]$NoNetLog, [switch]$WinlinkApps, [switch]$NoWinlinkApps)
 $ErrorActionPreference = 'Stop'
-$Version = '1.5.0'
+$Version = '1.6.0'
 
 $Src     = Join-Path (Split-Path -Parent $PSScriptRoot) 'app'
 $AppDir  = Join-Path $env:LOCALAPPDATA 'RigPanel'
@@ -145,13 +146,61 @@ else {
     $WantNetLog = (Ask 'Install the Net log add-on? (y/n)' $def) -match '^[Yy]'
 }
 
+# --- Optional: Winlink Express + VARA FM ------------------------------------------------
+# Not bundled: winlink.org serves them only to a web browser. Open the download page, find the file in
+# Downloads, unpack it and run the vendor's own setup (which asks for administrator rights itself).
+function Find-Installed($rel) {
+    @('C:\', $env:ProgramFiles, ${env:ProgramFiles(x86)}) | Where-Object { $_ } |
+        ForEach-Object { Join-Path $_ $rel } | Where-Object { Test-Path $_ } | Select-Object -First 1
+}
+function Install-Extra($name, $url, $hint, $patterns) {
+    $dl = Join-Path $env:USERPROFILE 'Downloads'
+    $find = { Get-ChildItem -Path $dl -File -ErrorAction SilentlyContinue |
+              Where-Object { $n = $_.Name; ($patterns | Where-Object { $n -like $_ }) } |
+              Sort-Object LastWriteTime -Descending | Select-Object -First 1 }
+    $file = & $find
+    if (-not $file) {
+        Write-Host "  $name comes from winlink.org. Opening the download page: download $hint."
+        Start-Process $url
+        while (-not $file) {
+            if ((Read-Host "  Press Enter when the download has finished (or type s to skip $name)") -match '^[Ss]') {
+                Warn "$name skipped"; return
+            }
+            $file = & $find
+            if (-not $file) { Warn "Not found in $dl yet (still downloading, or saved somewhere else?)" }
+        }
+    }
+    Info "Found $($file.Name)"
+    $exe = $file.FullName
+    if ($file.Extension -eq '.zip') {
+        $tmp = Join-Path $env:TEMP ("rigpanel-" + [guid]::NewGuid())
+        Expand-Archive -LiteralPath $file.FullName -DestinationPath $tmp -Force
+        $exes = Get-ChildItem $tmp -Recurse -Filter *.exe
+        $exe = ($exes | Where-Object { $_.Name -match 'setup|install' } | Select-Object -First 1), ($exes | Select-Object -First 1) |
+               Where-Object { $_ } | Select-Object -First 1 | ForEach-Object { $_.FullName }
+        if (-not $exe) { Warn "No setup program in $($file.Name). Is the download complete?"; return }
+    }
+    Write-Host "  Starting the $name setup. Click through it, then come back here."
+    Start-Process -FilePath $exe -WorkingDirectory (Split-Path $exe) -Wait
+}
+$WlExe   = Find-Installed 'RMS Express\RMS Express.exe'
+$VaraExe = Find-Installed 'VARA FM\VARAFM.exe'
+if ($WlExe -and $VaraExe) { $WantWinlinkApps = $false }
+elseif ($WinlinkApps) { $WantWinlinkApps = $true }
+elseif ($NoWinlinkApps) { $WantWinlinkApps = $false }
+else {
+    Write-Host '  Winlink Express + VARA FM: send and receive Winlink email over the radio. You download them from'
+    Write-Host '  winlink.org in your browser and this installer runs their setup.'
+    $WantWinlinkApps = (Ask 'Set up Winlink Express and VARA FM? (y/n)' 'n') -match '^[Yy]'
+}
+
 # --- Install files --------------------------------------------------------------------
 Write-Host "`nInstalling" -ForegroundColor Cyan
 Get-CimInstance Win32_Process -Filter "Name like 'python%'" -ErrorAction SilentlyContinue |
     Where-Object { $_.CommandLine -like '*RigPanel*rigpanel.py*' } |
     ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }
 New-Item -ItemType Directory -Force -Path $AppDir | Out-Null
-foreach ($f in @('rigpanel.py', 'radios.py', 'index.html', 'menus.json', 'nwr.json', 'rigpanel.svg', 'rigpanel.ico')) {
+foreach ($f in @('rigpanel.py', 'radios.py', 'index.html', 'menus.json', 'nwr.json', 'rigpanel.svg', 'rigpanel.ico', 'icsforms.py', 'index-ics.html')) {
     Copy-Item -Force (Join-Path $Src $f) $AppDir
 }
 foreach ($f in $NetLogFiles) {
@@ -197,6 +246,15 @@ Info "Start Menu + Desktop shortcut: `"$($conf.callsign) Rig Panel`""
 if ((Ask 'Start the panel automatically when you log in? (y/n)' 'y') -match '^[Yy]') {
     New-Shortcut (Join-Path $Startup 'RigPanel.lnk') $PyW "`"$AppDir\rigpanel.py`"" 'RigPanel background service'
     Info 'Will start at login'
+}
+
+if ($WantWinlinkApps) {
+    Write-Host "`nWinlink Express + VARA FM" -ForegroundColor Cyan
+    if ($VaraExe) { Info "VARA FM is already installed" }
+    else { Install-Extra 'VARA FM' 'https://downloads.winlink.org/VARA%20Products/' 'the newest "VARA FM v... setup.zip" (not VARA HF)' @('VARA FM*.zip', 'VARA*FM*setup*.exe') }
+    if ($WlExe) { Info "Winlink Express is already installed" }
+    else { Install-Extra 'Winlink Express' 'https://downloads.winlink.org/User%20Programs/' 'the newest "Winlink_Express_install_....zip"' @('Winlink_Express_install*.zip', 'Winlink*Express*.zip') }
+    Write-Host "  In VARA FM: Settings > SoundCard = the radio's USB Audio CODEC (input and output); Settings > PTT = $pttTip, RTS."
 }
 
 # --- Start and check ---------------------------------------------------------------

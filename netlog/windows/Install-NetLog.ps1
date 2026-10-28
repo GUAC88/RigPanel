@@ -4,7 +4,7 @@
 #   -Reconfigure   re-run the setup questions on an existing install
 param([switch]$Reconfigure)
 $ErrorActionPreference = 'Stop'
-$Version = '1.1.0'
+$Version = '1.2.0'
 
 $Src = Join-Path (Split-Path -Parent $PSScriptRoot) 'app'
 if (-not (Test-Path $Src)) { $Src = Join-Path (Split-Path -Parent (Split-Path -Parent $PSScriptRoot)) 'app' }   # inside the RigPanel source tree

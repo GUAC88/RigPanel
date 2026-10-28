@@ -1,4 +1,4 @@
-# RigPanel 1.5.0
+# RigPanel 1.6.0
 
 A browser control panel for CAT-controlled ham radios: one-tap Quick Setups (Winlink VARA FM, VarAC 2m/70cm,
 NOAA weather), frequency/mode/tone controls with EQ-style volume/power/squelch faders, talking through the radio
@@ -6,6 +6,16 @@ with your **PC microphone**, a **station status** card that spots Winlink/VARA a
 Linux), quick links to popular ham sites, a callsign lookup card, your callsign on the display, four colour themes
 with light and dark modes, and a choice of backgrounds (patterns or your own photo). The whole panel fits on one
 screen on a 1080p monitor.
+
+### New in 1.6
+- **ICS forms**: fill in, save and print **16 standard ICS forms** (201 through 309, including the 213 message,
+  214 activity log, 205 radio plan and 309 comms log) from the **📝 ICS forms** button. The PDF follows the standard
+  numbered-box layout. The 205 and 217A can fill their channels from your presets, and the 309 and 211 from a Net log.
+- **Net log**: a **Logger** field under Net control, for when the person keeping the log isn't running the net.
+  It's shown on the PDF and Word exports.
+- **Winlink Express and VARA FM** are now an option in the installers. You download them from winlink.org in your
+  browser (they can't be bundled); the installer opens the page, finds the downloads and runs their setup. On Linux
+  it also sets up Wine for them, adds menu entries and gives VARA the radio's Standard port as COM5 for PTT.
 
 ### New in 1.5
 - **Windows installers**: `Setup.exe` and `.msi` with Python built in. Nothing else to install first.
@@ -37,6 +47,7 @@ screen on a 1080p monitor.
 | ![Grid squares background](docs/screenshots/background-grid.png) **Grid squares background**, centred on your grid square | ![Radio waves background](docs/screenshots/background-waves.png) **Radio waves background**, Violet theme |
 | ![Background picker](docs/screenshots/background-picker.png) **Background picker** | ![RigPanel on a phone](docs/screenshots/phone.png) **On a phone** |
 | ![Net log add-on during a net](docs/screenshots/netlog.png) **Net log add-on** during a net | ![Net log PDF export with a club letterhead](docs/screenshots/netlog-pdf.png) **Net log PDF export** with your letterhead |
+| ![ICS-309 communications log filled from a net, and the list of 16 forms](docs/screenshots/ics-forms.png) **ICS forms**: an ICS-309 filled from a net log | ![ICS-205 radio plan PDF](docs/screenshots/ics-205-pdf.png) **ICS-205 PDF** with channels from your presets |
 
 Screenshots use demo data (`docs/demo_server.py`, the fictional N0CALL and generic frequencies). Regenerate them with `docs/make-screenshots.sh`.
 
@@ -62,7 +73,7 @@ Runs on **Linux (Arch, Debian, Ubuntu, Mint, Raspberry Pi OS)** and **Windows 10
 
 ### Linux
 ```
-tar xzf rigpanel-1.5.0.tar.gz
+tar xzf rigpanel-1.6.0.tar.gz
 cd rigpanel
 ./install.sh
 ```
@@ -74,22 +85,29 @@ Debian/Ubuntu) if you aren't already in it. Log out and back in afterwards.
 - Change settings: `./install.sh --reconfigure`
 - Unattended: `./install.sh --yes --callsign N0CALL --grid EM25fs --port /dev/ttyUSB0`
 - Remove: `./uninstall.sh` (add `--purge` to also delete settings)
+- Winlink Express + VARA FM: the installer offers to set them up (or run `./install-winlink.sh` any time). They're
+  Windows programs, so this installs Wine and winetricks if needed (asks for `sudo`), downloads nothing itself:
+  it opens winlink.org, you download the two files, and it runs their setup in their own Wine prefix
+  (`~/.wine-vara`), adds **VARA FM** and **Winlink Express** to your app menu and maps the radio's Standard port to
+  COM5. Intel/AMD PCs only (not a Raspberry Pi). Allow 10-20 minutes for the .NET part Winlink Express needs.
 
 Needs: Python 3.8+ (preinstalled on most desktops). No other packages.
 
 ### Windows
-Download **`RigPanel-1.5.0-Setup.exe`** from the [releases page](https://github.com/GUAC88/RigPanel/releases) and run it.
+Download **`RigPanel-1.6.0-Setup.exe`** from the [releases page](https://github.com/GUAC88/RigPanel/releases) and run it.
 - No Python needed: RigPanel brings its own (Python 3.14 with pyserial). Your PC's own Python is left alone.
 - Installs for your Windows account only (no admin rights), to `%LOCALAPPDATA%\Programs\RigPanel`.
 - Asks for your callsign and grid square, whether to include the **Net log add-on**, a Desktop shortcut, and
   whether to start RigPanel at login. Remove it in **Settings → Apps**. Your settings are kept.
+- Optional **Winlink Express** and **VARA FM** (shown only if they aren't installed yet): setup opens the
+  winlink.org download page, picks the files up from your Downloads folder and runs their own installers.
 - The installer isn't code-signed yet, so Windows SmartScreen may say "Windows protected your PC". Click
   **More info → Run anyway**.
 - Upgrading from the 1.4 zip install: run the setup. It replaces the old copy and keeps your settings.
 
-For IT-managed installs there's **`RigPanel-1.5.0.msi`** (per-user, silent with `msiexec /i RigPanel-1.5.0.msi /qn`;
+For IT-managed installs there's **`RigPanel-1.6.0.msi`** (per-user, silent with `msiexec /i RigPanel-1.6.0.msi /qn`;
 features `NetLogAddon`, `DesktopShortcut`, `StartAtLogin` via `ADDLOCAL`/`REMOVE`). It asks no questions: RigPanel
-asks for your callsign the first time it opens. The script install from `rigpanel-1.5.0-windows.zip`
+asks for your callsign the first time it opens, and doesn't offer Winlink/VARA. The script install from `rigpanel-1.6.0-windows.zip`
 (`windows\Install-RigPanel.bat`) still works if you'd rather use your own Python.
 
 If Windows shows no COM ports for the radio, install the
@@ -147,12 +165,33 @@ The installer asks whether to add the **Net log**, a logger for running net cont
 - Type a callsign and press Enter. Each check-in is stamped in UTC, with the name, city and distance from the FCC
   database, and the radio's frequency is filled in for you.
 - Mark **Traffic**, **Short time**, **Mobile**, **✓ acknowledged** and notes on each check-in.
+- **Logger** (under Net control) records who kept the log when that isn't net control.
 - Export to **PDF** or **Word** with your club's letterhead (built from its name, tagline and logo, or your own
   uploaded letterhead image), to **CSV**, or **Copy summary** for posting.
 
 Logs are saved as you go in `netlogs/` in RigPanel's settings folder. Choose without being asked with
 `./install.sh --netlog` / `--no-netlog` (Windows: `-NetLog` / `-NoNetLog`).
 The same logger is also available as a stand-alone app with no radio needed: see [netlog/README.md](netlog/README.md).
+
+## ICS forms
+**📝 ICS forms** opens a page with 16 standard ICS forms. The four radio operators use most are at the top:
+
+| Form | Filled in for you |
+|---|---|
+| **ICS-213** General Message | From (your callsign), date and time |
+| **ICS-214** Activity Log | Your name and the date. **+ Row** stamps the time on each activity |
+| **ICS-205** Incident Radio Communications Plan | **+ My presets** adds your saved frequencies, with repeater offsets and tones |
+| **ICS-309** Communications Log | **From a net log…** adds every check-in of a net, with its times and the logger as radio operator |
+
+Also included: **201** Incident Briefing, **202** Incident Objectives, **203** Organization Assignment List (with its
+standard positions listed), **204** Assignment List, **205A** Communications List, **206** Medical Plan, **208** Safety
+Message/Plan, **210** Resource Status Change, **211** Incident Check-In List (can fill from a net log), **213RR**
+Resource Request, **217A** Communications Resource Availability Worksheet (can fill from your presets) and **221**
+Demobilization Check-Out. Not included: 207 (an org chart), 209, and the air operations and planning worksheets.
+
+Forms save as you type. **🖨 PDF** gives the filled-in form in the standard layout (numbered boxes, continued on
+more pages if needed) to print, file or attach to a Winlink message. **Copy** starts the next operational period
+from the same form. Forms are kept in `icsforms/` in RigPanel's settings folder.
 
 ## Sharing the radio with other programs (Hamlib)
 RigPanel also runs a Hamlib `rigctld`-compatible server on `localhost:4532`. Point other programs
@@ -188,6 +227,7 @@ open. Then set up VARA FM once:
 | `app/radios.py` | The radio drivers: Yaesu CAT and Icom CI-V over the USB serial port (termios on Linux, pyserial on Windows), and Hamlib through `rigctld`. |
 | `app/index.html` | The whole user interface. One page of HTML, CSS and JavaScript with no frameworks. It polls the server once a second. |
 | `app/netlogcore.py`, `app/netexport.py`, `app/index-net.html` | The Net log add-on: log storage and API, PDF/Word export with letterhead, and its page. `app/netlog.py` runs the same thing as the stand-alone Net Log app. |
+| `app/icsforms.py`, `app/index-ics.html` | ICS forms: storage, API and the PDF forms (each form's layout is described once and used for both the page and the PDF), and the page. |
 | `app/menus.json` | The FT-991A MENU table (001-153), built from Yaesu's CAT Operation Reference Manual, with known misprints corrected. |
 | `app/nwr.json` | NOAA Weather Radio transmitters and the counties they serve, from NOAA's [County Coverage Listing](https://www.weather.gov/nwr/county_coverage) (public domain). Refresh it with `tools/update-nwr.py`. Your county comes from the FCC's [census area lookup](https://geo.fcc.gov/api/census/). |
 | `app/launch.py`, `app/stop.py` | Start the app in the background and open the browser; stop it before an upgrade or uninstall (used by the Windows installers). |

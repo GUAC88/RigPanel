@@ -377,6 +377,7 @@
     <button id="mode-toggle" title="Light / dark" aria-label="Switch light or dark">◐</button>
     <button id="open-bg" title="Background" aria-label="Background">🖼</button>
     <button id="open-net" title="Net logging (opens in its own tab)" hidden>📋 <span class="lbl">Net log</span></button>
+    <button id="open-ics" title="ICS-213, 214, 205 and 309 forms: fill in, save and print (opens in its own tab)" hidden>📝 <span class="lbl">ICS forms</span></button>
     <button id="open-radio" title="Choose and connect your radio">📻 <span class="lbl">Radio setup</span></button>
     <button id="open-settings" title="The radio's menu settings" hidden>⚙ <span class="lbl">Radio menus</span></button>
   </div>
@@ -662,6 +663,7 @@ function loadConfig() {
     $("ver").textContent = "v" + c.version;
     applyCaps(); renderLinks();
     $("open-net").hidden = !(c.trials || []).includes("net");
+    $("open-ics").hidden = !(c.trials || []).includes("ics");
     if (c.needs_setup && !loadConfig.asked && !$("setup-dlg").open) { loadConfig.asked = true; $("setup-dlg").showModal(); $("setup-call").focus(); }
   });
 }
@@ -1155,6 +1157,7 @@ $("st-fix").onclick = async () => {
 loadStation(); setInterval(() => { if (!document.hidden) loadStation(); }, 5000);
 
 $("open-net").onclick = () => window.open("/net", "rigpanel-net");
+$("open-ics").onclick = () => window.open("/ics", "rigpanel-ics");
 // First run (no callsign yet): ask for it
 $("setup-later").onclick = () => $("setup-dlg").close();
 $("setup-form").onsubmit = async e => {

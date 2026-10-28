@@ -36,7 +36,7 @@ import os, shutil, sys, zipfile
 root, stage, pyzip, whl = sys.argv[1:]
 APPS = {
     "rigpanel": ["rigpanel.py", "radios.py", "index.html", "menus.json", "nwr.json", "rigpanel.svg", "rigpanel.ico",
-                 "index-net.html", "netlogcore.py", "netexport.py", "launch.py", "stop.py"],
+                 "icsforms.py", "index-ics.html", "index-net.html", "netlogcore.py", "netexport.py", "launch.py", "stop.py"],
     "netlog": ["netlog.py", "netlogcore.py", "netexport.py", "index-net.html", "netlog.svg", "netlog.ico", "launch.py", "stop.py"],
 }
 for name, files in APPS.items():

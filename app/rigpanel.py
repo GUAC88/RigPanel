@@ -30,7 +30,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))   # radios / netl
 sys.dont_write_bytecode = True   # no __pycache__ folders in the install folder (uninstallers leave nothing behind)
 import radios  # noqa: E402
 
-VERSION = "1.5.0"
+VERSION = "1.6.0"
 
 if os.name == "nt":
     CONFIG_DIR = os.path.join(os.environ.get("APPDATA") or os.path.expanduser("~"), "RigPanel")
@@ -842,11 +842,15 @@ try:
     import netlogcore
 except ImportError:
     netlogcore = None
-TRIAL_PAGES = {"/new": "index-new.html", "/net": "index-net.html"}
+try:
+    import icsforms   # ICS-213/214/205/309 forms (index-ics.html)
+except ImportError:
+    icsforms = None
+TRIAL_PAGES = {"/new": "index-new.html", "/net": "index-net.html", "/ics": "index-ics.html"}
 
 
 def trial_page(path):
-    if path == "/net" and not netlogcore:
+    if (path == "/net" and not netlogcore) or (path == "/ics" and not icsforms):
         return None
     f = TRIAL_PAGES.get(path)
     f = f and os.path.join(os.path.dirname(PAGE_PATH), f)
@@ -919,6 +923,8 @@ class Handler(BaseHTTPRequestHandler):
                         "radio": drv.model if drv else "", "caps": drv.caps() if drv else None,
                         "trials": [k[1:] for k in TRIAL_PAGES if trial_page(k)], "needs_setup": needs_setup()})
         elif netlogcore and netlogcore.handle_get(self, self.path, CONFIG_DIR, MYCALL):
+            pass
+        elif icsforms and icsforms.handle_get(self, self.path, CONFIG_DIR):
             pass
         elif self.path == "/api/station":
             self._json(station_status())
@@ -1024,6 +1030,8 @@ class Handler(BaseHTTPRequestHandler):
                 self._json({"ok": False, "message": str(e)}, 400)
             return
         elif netlogcore and netlogcore.handle_post(self, p, body, CONFIG_DIR):
+            return
+        elif icsforms and icsforms.handle_post(self, p, body, CONFIG_DIR):
             return
         elif p == "/api/station-setup":
             try:

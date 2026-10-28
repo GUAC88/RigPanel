@@ -37,6 +37,9 @@ Name: "custom"; Description: "Choose"; Flags: iscustom
 [Components]
 Name: "main"; Description: "RigPanel"; Types: full compact custom; Flags: fixed
 Name: "netlog"; Description: "Net log add-on (log net check-ins; export to PDF / Word with your letterhead)"; Types: full
+; Winlink programs: not bundled (winlink.org serves them only to a web browser). Setup opens the download page, then runs their setup.
+Name: "winlink"; Description: "Winlink Express - Winlink email client (downloaded from winlink.org)"; Check: not WinlinkInstalled
+Name: "vara"; Description: "VARA FM - the sound modem Winlink uses on 2m/70cm (downloaded from winlink.org)"; Check: not VaraInstalled
 
 [Tasks]
 Name: "desktopicon"; Description: "Create a &Desktop shortcut"
@@ -160,6 +163,154 @@ begin
   Result := '';
 end;
 
+{ --- Winlink Express and VARA FM: found in Downloads (or downloaded now in the browser), then their own setup runs --- }
+
+function FindInstalled(Rel: String): Boolean;
+begin
+  Result := FileExists('C:\' + Rel) or FileExists(ExpandConstant('{commonpf32}\') + Rel) or
+            FileExists(ExpandConstant('{commonpf64}\') + Rel);
+end;
+
+function WinlinkInstalled: Boolean;
+begin
+  Result := FindInstalled('RMS Express\RMS Express.exe');
+end;
+
+function VaraInstalled: Boolean;
+begin
+  Result := FindInstalled('VARA FM\VARAFM.exe');
+end;
+
+function DownloadsDir: String;
+begin
+  Result := ExpandConstant('{%USERPROFILE}\Downloads');
+end;
+
+{ Best becomes the newest file in Dir matching Pattern if it is newer than Best (BestHi/BestLo = Best's write time) }
+procedure Newest(Dir, Pattern: String; var Best: String; var BestHi, BestLo: Cardinal);
+var
+  F: TFindRec;
+begin
+  if FindFirst(Dir + '\' + Pattern, F) then
+  try
+    repeat
+      if (F.Attributes and FILE_ATTRIBUTE_DIRECTORY = 0) and ((Best = '') or (F.LastWriteTime.dwHighDateTime > BestHi) or
+         ((F.LastWriteTime.dwHighDateTime = BestHi) and (F.LastWriteTime.dwLowDateTime > BestLo))) then
+      begin
+        Best := Dir + '\' + F.Name;
+        BestHi := F.LastWriteTime.dwHighDateTime;
+        BestLo := F.LastWriteTime.dwLowDateTime;
+      end;
+    until not FindNext(F);
+  finally
+    FindClose(F);
+  end;
+end;
+
+function FindDownload(P1, P2: String): String;
+var
+  Hi, Lo: Cardinal;
+begin
+  Result := '';
+  Hi := 0;
+  Lo := 0;
+  Newest(DownloadsDir, P1, Result, Hi, Lo);
+  Newest(DownloadsDir, P2, Result, Hi, Lo);
+end;
+
+{ the setup program inside an unpacked download: prefer *setup* / *install*, and look one folder down too }
+function FindSetupExe(Dir: String; Depth: Integer): String;
+var
+  F: TFindRec;
+  Any: String;
+begin
+  Result := '';
+  Any := '';
+  if FindFirst(Dir + '\*', F) then
+  try
+    repeat
+      if (F.Name <> '.') and (F.Name <> '..') then
+      begin
+        if F.Attributes and FILE_ATTRIBUTE_DIRECTORY <> 0 then
+        begin
+          if Depth > 0 then
+          begin
+            Result := FindSetupExe(Dir + '\' + F.Name, Depth - 1);
+            if (Result <> '') and (Pos('SETUP', Uppercase(ExtractFileName(Result))) = 0) and
+               (Pos('INSTALL', Uppercase(ExtractFileName(Result))) = 0) then
+            begin
+              if Any = '' then Any := Result;
+              Result := '';
+            end;
+          end;
+        end
+        else if CompareText(ExtractFileExt(F.Name), '.exe') = 0 then
+        begin
+          if (Pos('SETUP', Uppercase(F.Name)) > 0) or (Pos('INSTALL', Uppercase(F.Name)) > 0) then Result := Dir + '\' + F.Name
+          else if Any = '' then Any := Dir + '\' + F.Name;
+        end;
+      end;
+    until (Result <> '') or not FindNext(F);
+  finally
+    FindClose(F);
+  end;
+  if Result = '' then Result := Any;
+end;
+
+{ a path inside a PowerShell '...' string: single quotes are doubled }
+function PsQuote(S: String): String;
+begin
+  Result := S;
+  StringChangeEx(Result, '''', '''''', True);
+  Result := '''' + Result + '''';
+end;
+
+procedure InstallExtra(Name, Url, Hint, P1, P2: String);
+var
+  Download, Dir, Exe: String;
+  Code: Integer;
+begin
+  Download := FindDownload(P1, P2);
+  Log(Name + ': download in ' + DownloadsDir + ': ' + Download);
+  if Download = '' then
+  begin
+    if MsgBox(Name + ' comes from winlink.org. Setup will open its download page in your browser.' + #13#10#13#10 +
+              'Download ' + Hint + ', then come back here.', mbInformation, MB_OKCANCEL) = IDCANCEL then Exit;
+    ShellExec('open', Url, '', '', SW_SHOWNORMAL, ewNoWait, Code);
+    repeat
+      if MsgBox('Click OK when the ' + Name + ' download has finished.' + #13#10#13#10 +
+                '(Cancel skips ' + Name + '. You can install it yourself later.)', mbInformation, MB_OKCANCEL) = IDCANCEL then Exit;
+      Download := FindDownload(P1, P2);
+      if (Download = '') and (MsgBox('Setup can''t find the ' + Name + ' download in ' + DownloadsDir + '.' + #13#10 +
+          'Do you want to find it yourself?', mbConfirmation, MB_YESNO) = IDYES) then
+        if not GetOpenFileName('Find the ' + Name + ' download', Download, DownloadsDir,
+                               'Zip or setup files (*.zip;*.exe)|*.zip;*.exe', 'zip') then Download := '';
+    until Download <> '';
+  end;
+
+  if CompareText(ExtractFileExt(Download), '.zip') = 0 then
+  begin
+    Dir := ExpandConstant('{tmp}\') + Name;
+    ForceDirectories(Dir);
+    Exec(ExpandConstant('{sys}\WindowsPowerShell\v1.0\powershell.exe'),
+         '-NoProfile -ExecutionPolicy Bypass -Command "Expand-Archive -LiteralPath ' + PsQuote(Download) +
+         ' -DestinationPath ' + PsQuote(Dir) + ' -Force"', '', SW_HIDE, ewWaitUntilTerminated, Code);
+    Exe := FindSetupExe(Dir, 1);
+  end
+  else
+    Exe := Download;
+  if Exe = '' then
+  begin
+    MsgBox('No setup program was found in ' + Download + '. Is the download complete? You can install ' + Name +
+           ' yourself later.', mbError, MB_OK);
+    Exit;
+  end;
+  { the vendor's own installer: it asks for administrator rights itself if it needs them }
+  Log(Name + ': running ' + Exe);
+  if not ShellExec('', Exe, '', ExtractFileDir(Exe), SW_SHOWNORMAL, ewWaitUntilTerminated, Code) then
+    MsgBox('The ' + Name + ' setup didn''t start: ' + SysErrorMessage(Code), mbError, MB_OK);
+end;
+
 procedure CurStepChanged(CurStep: TSetupStep);
 var
   Call, Grid: String;
@@ -177,6 +328,15 @@ begin
       '  "baud": 38400,' + #13#10 +
       '  "http_port": 8073,' + #13#10 +
       '  "winlink_freq": 145030000' + #13#10 + '}' + #13#10, False);
+  end;
+  if (CurStep = ssPostInstall) and not WizardSilent then
+  begin
+    if WizardIsComponentSelected('vara') then
+      InstallExtra('VARA FM', 'https://downloads.winlink.org/VARA%20Products/',
+                   'the newest "VARA FM v... setup.zip" (not VARA HF)', 'VARA FM*.zip', 'VARA*FM*setup*.exe');
+    if WizardIsComponentSelected('winlink') then
+      InstallExtra('Winlink Express', 'https://downloads.winlink.org/User%20Programs/',
+                   'the newest "Winlink_Express_install_....zip"', 'Winlink_Express_install*.zip', 'Winlink*Express*.zip');
   end;
 end;
 

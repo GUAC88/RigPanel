@@ -8,7 +8,7 @@
 #        ./install.sh --callsign N0CALL --grid EM26 --yes   unattended
 set -euo pipefail
 
-VERSION="1.1.0"
+VERSION="1.2.0"
 HERE="$(cd "$(dirname "$0")" && pwd)"
 SRC="$HERE/app"; [ -d "$SRC" ] || SRC="$HERE/../app"   # package layout, or inside the RigPanel source tree
 APP_DIR="$HOME/.local/share/netlog"
